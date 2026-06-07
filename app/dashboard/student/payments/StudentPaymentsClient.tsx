@@ -140,6 +140,14 @@ export default function StudentPaymentsClient({
   };
 
   return (
+    <div className="space-y-6">
+      {!moyasarEnabled && !tamaraEnabled && !tabbyEnabled && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-600 dark:text-amber-400 leading-relaxed">
+          الدفع الإلكتروني والتقسيط غير مفعّلين حالياً. يمكنك الاشتراك عبر{" "}
+          <strong>التحويل البنكي</strong> ورفع الإيصال — سيراجعه فريقنا ويُفعّل دورتك.
+        </div>
+      )}
+
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1 space-y-4">
         <div className="card-brand bg-card p-6 space-y-4">
@@ -381,6 +389,7 @@ export default function StudentPaymentsClient({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

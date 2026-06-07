@@ -71,7 +71,16 @@ export async function resolveSecureVideo(
   }
 
   if (lesson.videoUrl) {
-    if (process.env.NODE_ENV === "production" && !process.env.ALLOW_DIRECT_VIDEO_URLS) {
+    const premiumConfigured =
+      isCloudflareStreamConfigured() || isVimeoConfigured();
+
+    // Block raw MP4 in production only when signed providers are configured.
+    // Otherwise allow direct URLs so courses work before Cloudflare/Vimeo setup.
+    if (
+      process.env.NODE_ENV === "production" &&
+      premiumConfigured &&
+      !process.env.ALLOW_DIRECT_VIDEO_URLS
+    ) {
       return { type: "none" };
     }
 

@@ -13,7 +13,8 @@ import {
   Sparkles,
   LogOut,
   Home,
-  FileCheck
+  FileCheck,
+  MessageSquare
 } from "lucide-react";
 
 interface SidebarProps {
@@ -48,6 +49,11 @@ export default function DashboardSidebar({ role, userName }: SidebarProps) {
             href: "/dashboard/admin/courses",
             label: "إدارة الدورات",
             icon: BookOpen,
+          },
+          {
+            href: "/dashboard/admin/contacts",
+            label: "رسائل التواصل",
+            icon: MessageSquare,
           },
         ];
       case "INSTRUCTOR":

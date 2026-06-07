@@ -20,6 +20,7 @@ model User {
   enrollments   Enrollment[]
   payments      Payment[]
   resetTokens   PasswordResetToken[]
+  certificates  Certificate[]
 }
 
 enum Role {
@@ -58,6 +59,7 @@ model Course {
   sections      Section[]
   enrollments   Enrollment[]
   payments      Payment[]
+  certificates  Certificate[]
   createdAt     DateTime @default(now())
 }
 
@@ -183,4 +185,16 @@ enum ContactStatus {
   NEW
   READ
   REPLIED
+}
+
+model Certificate {
+  id                  String   @id @default(cuid())
+  certificateNumber   String   @unique
+  userId              String
+  courseId            String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course              Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  issuedAt            DateTime @default(now())
+
+  @@unique([userId, courseId])
 }

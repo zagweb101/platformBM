@@ -98,3 +98,30 @@ export async function sendPaymentApprovedEmail(
     `,
   });
 }
+
+export async function sendCertificateEmail(
+  email: string,
+  studentName: string,
+  courseTitle: string,
+  certificateNumber: string
+) {
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+  return sendEmail({
+    to: email,
+    subject: "تهانينا! شهادتك جاهزة — بيت المصور",
+    html: `
+      <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; max-width: 520px; margin: 0 auto;">
+        <h2 style="color: #4F46E5;">مبروك ${studentName}!</h2>
+        <p>أكملت بنجاح دورة:</p>
+        <p style="font-weight: bold; font-size: 18px;">${courseTitle}</p>
+        <p>رقم الشهادة: <strong>${certificateNumber}</strong></p>
+        <p style="margin: 24px 0;">
+          <a href="${baseUrl}/dashboard/student" style="background: #4F46E5; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+            عرض شهادتي
+          </a>
+        </p>
+      </div>
+    `,
+  });
+}

@@ -11,21 +11,26 @@ import AboutSection from "@/components/landing/AboutSection";
 import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
 import { serializeCoursePrice } from "@/lib/serialize-client";
+import { getPlatformStats, formatStatsForDisplay } from "@/lib/platform-stats";
 
 export default async function Home() {
-  // Get all published courses from the database
-  const coursesRaw = await db.course.findMany({
-    where: { status: "PUBLISHED" },
-    include: {
-      instructor: {
-        include: {
-          user: true,
+  const [coursesRaw, platformStats] = await Promise.all([
+    db.course.findMany({
+      where: { status: "PUBLISHED" },
+      include: {
+        instructor: {
+          include: {
+            user: true,
+          },
         },
       },
-    },
-  });
+    }),
+    getPlatformStats(),
+  ]);
 
   const courses = coursesRaw.map(serializeCoursePrice);
+
+  const stats = formatStatsForDisplay(platformStats);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col selection:bg-brand-indigo/30 selection:text-white">
@@ -36,7 +41,7 @@ export default async function Home() {
       <HeroSection />
       
       {/* 3. Stats Bar (Scroll animation counter) */}
-      <StatsBar />
+      <StatsBar stats={stats} />
       
       {/* 4. Why Us / Features */}
       <FeaturesSection />

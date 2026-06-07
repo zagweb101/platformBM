@@ -23,6 +23,7 @@ export default async function AdminDashboardPage() {
   const totalPendingInstructors = await db.instructor.count({ where: { status: "PENDING" } });
   
   const totalCourses = await db.course.count();
+  const newContactMessages = await db.contactMessage.count({ where: { status: "NEW" } });
   
   const approvedPayments = await db.payment.findMany({
     where: { status: "APPROVED" }
@@ -104,7 +105,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Quick Action Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         <div className="card-brand p-6 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-text-primary mb-2">مراجعة المدفوعات والاشتراكات</h3>
@@ -147,6 +148,21 @@ export default async function AdminDashboardPage() {
             className="btn-primary text-xs py-2 text-center w-full block"
           >
             عرض جميع الدورات ({totalCourses})
+          </Link>
+        </div>
+
+        <div className="card-brand p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="text-base font-bold text-text-primary mb-2">رسائل التواصل</h3>
+            <p className="text-xs text-text-secondary leading-relaxed mb-4">
+              راجع رسائل الزوار من نموذج التواصل في الموقع وتابع حالة الرد.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/admin/contacts"
+            className="btn-primary text-xs py-2 text-center w-full block"
+          >
+            رسائل جديدة ({newContactMessages})
           </Link>
         </div>
       </div>

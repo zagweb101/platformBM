@@ -2,37 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 
-interface StatItemProps {
+export interface StatItem {
   value: number;
   suffix: string;
   label: string;
 }
 
-function Counter({ value, suffix, label }: StatItemProps) {
-  const [count, setCount] = useState(0);
+function Counter({ value, suffix, label }: StatItem) {
+  const [count, setCount] = useState(value);
   const elementRef = useRef<HTMLDivElement>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
     const currentElement = elementRef.current;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
-          const duration = 1500; // 1.5s animation duration
+          setCount(0);
+
+          const duration = 1500;
           const startTime = performance.now();
 
           const animate = (currentTime: number) => {
             const elapsedTime = currentTime - startTime;
             const progress = Math.min(elapsedTime / duration, 1);
-            
-            // Ease out quad
             const easeProgress = progress * (2 - progress);
-            const currentCount = Math.floor(easeProgress * value);
-            
-            setCount(currentCount);
+            setCount(Math.floor(easeProgress * value));
 
             if (progress < 1) {
               requestAnimationFrame(animate);
@@ -69,14 +67,7 @@ function Counter({ value, suffix, label }: StatItemProps) {
   );
 }
 
-export default function StatsBar() {
-  const stats = [
-    { value: 500, suffix: "+", label: "طالب محترف" },
-    { value: 20, suffix: "+", label: "كورس متخصص" },
-    { value: 50, suffix: "+", label: "مدرب معتمد" },
-    { value: 98, suffix: "%", label: "نسبة الرضا" },
-  ];
-
+export default function StatsBar({ stats }: { stats: StatItem[] }) {
   return (
     <section className="relative w-full py-8 bg-[#0b0b12] border-y border-gray-900 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

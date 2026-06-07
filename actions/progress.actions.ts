@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { issueCertificateIfEligible } from "@/lib/certificate";
 
 export async function markLessonComplete(
   enrollmentId: string,
@@ -47,7 +48,12 @@ export async function markLessonComplete(
       });
     }
 
+    if (completed) {
+      await issueCertificateIfEligible(session.user.id, enrollment.courseId);
+    }
+
     revalidatePath(`/dashboard/student/learn/${enrollment.courseId}/${lessonId}`);
+    revalidatePath("/dashboard/student");
     return { success: "تم تحديث التقدم بنجاح." };
   } catch (error) {
     console.error("Mark lesson complete error:", error);

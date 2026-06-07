@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { GraduationCap, PlayCircle, BookOpen, Camera } from "lucide-react";
+import { GraduationCap, PlayCircle, BookOpen, Camera, Award } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { getEnrollmentProgressMap } from "@/lib/course-progress";
 
 export const revalidate = 0;
 
@@ -13,7 +14,6 @@ export default async function StudentDashboardPage() {
     redirect("/login");
   }
 
-  // Fetch student enrollments
   const enrollments = await db.enrollment.findMany({
     where: { userId: session.user.id },
     include: {
@@ -33,6 +33,16 @@ export default async function StudentDashboardPage() {
       },
     },
   });
+
+  const progressMap = await getEnrollmentProgressMap(session.user.id);
+
+  const certificates = await db.certificate.findMany({
+    where: { userId: session.user.id },
+    select: { courseId: true, certificateNumber: true },
+  });
+  const certByCourse = Object.fromEntries(
+    certificates.map((c) => [c.courseId, c.certificateNumber])
+  );
 
   return (
     <div className="space-y-8">
@@ -63,10 +73,11 @@ export default async function StudentDashboardPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enrollments.map(({ id: enrollmentId, course }) => {
-            // Find first lesson to direct student to
             const firstSection = course.sections[0];
             const firstLesson = firstSection?.lessons[0];
-            
+            const progress = progressMap[course.id];
+            const certNumber = certByCourse[course.id];
+
             return (
               <div key={enrollmentId} className="card-brand bg-card overflow-hidden flex flex-col justify-between">
                 <div>
@@ -89,7 +100,7 @@ export default async function StudentDashboardPage() {
                     <h3 className="text-base font-bold text-text-primary line-clamp-2 min-h-[48px]" title={course.title}>
                       {course.title}
                     </h3>
-                    
+
                     <div className="flex items-center gap-2 text-xs text-text-secondary">
                       <div className="relative w-6 h-6 rounded-full overflow-hidden border border-subtle">
                         {course.instructor.user.image ? (
@@ -107,14 +118,42 @@ export default async function StudentDashboardPage() {
                       </div>
                       <p className="font-semibold">{course.instructor.user.name}</p>
                     </div>
+
+                    {progress && (
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] text-text-muted font-semibold">
+                          <span>التقدم</span>
+                          <span className="font-almarai">{progress.percent}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-brand-indigo to-brand-fuchsia transition-all"
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-text-muted">
+                          {progress.completedLessons} / {progress.totalLessons} دروس
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="p-6 pt-0 mt-4 border-t border-subtle/40 pt-4 flex items-center justify-between">
-                  <span className="text-xs text-text-muted font-semibold flex items-center gap-1">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    دورة مفعلة
-                  </span>
+                <div className="p-6 pt-0 mt-4 border-t border-subtle/40 pt-4 flex flex-wrap items-center justify-between gap-2">
+                  {certNumber ? (
+                    <Link
+                      href={`/dashboard/student/certificates/${course.id}`}
+                      className="flex items-center gap-1 text-xs font-bold text-emerald-500 hover:underline"
+                    >
+                      <Award className="w-4 h-4" />
+                      الشهادة
+                    </Link>
+                  ) : (
+                    <span className="text-xs text-text-muted font-semibold flex items-center gap-1">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      {progress?.isComplete ? "جاري إصدار الشهادة..." : "دورة مفعلة"}
+                    </span>
+                  )}
 
                   {firstLesson ? (
                     <Link
@@ -122,7 +161,7 @@ export default async function StudentDashboardPage() {
                       className="btn-primary flex items-center gap-1.5 text-xs py-2 px-4 shadow-sm"
                     >
                       <PlayCircle className="w-4 h-4" />
-                      ابدأ التعلم
+                      {progress?.percent ? "متابعة التعلم" : "ابدأ التعلم"}
                     </Link>
                   ) : (
                     <span className="text-xs text-text-muted">لا توجد دروس بعد</span>

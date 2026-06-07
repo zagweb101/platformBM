@@ -1,8 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { auth } from "@/auth";
 import { sendEmail } from "@/lib/email";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { ContactStatus } from "@prisma/client";
 
 const ContactSchema = z.object({
   name: z.string().min(2, "الاسم مطلوب"),
@@ -57,5 +60,37 @@ export async function submitContactForm(values: z.infer<typeof ContactSchema>) {
   } catch (error) {
     console.error("Contact form error:", error);
     return { error: "حدث خطأ أثناء إرسال الرسالة." };
+  }
+}
+
+async function assertAdmin() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return { error: "غير مصرح." as const };
+  }
+  return { session };
+}
+
+export async function getContactMessages() {
+  const access = await assertAdmin();
+  if ("error" in access) return access;
+
+  const messages = await db.contactMessage.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  return { messages };
+}
+
+export async function updateContactMessageStatus(id: string, status: ContactStatus) {
+  const access = await assertAdmin();
+  if ("error" in access) return access;
+
+  try {
+    await db.contactMessage.update({ where: { id }, data: { status } });
+    revalidatePath("/dashboard/admin/contacts");
+    return { success: "تم تحديث حالة الرسالة." };
+  } catch {
+    return { error: "تعذّر تحديث الرسالة." };
   }
 }
