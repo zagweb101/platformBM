@@ -34,7 +34,7 @@ export default async function Home() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             
-            {session ? (
+            {session?.user ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-text-secondary hidden md:inline">
                   مرحباً، <strong className="text-text-primary">{session.user.name}</strong>
@@ -215,22 +215,22 @@ export default async function Home() {
                   <div className="border-t border-subtle pt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="relative w-8 h-8 rounded-full overflow-hidden border border-brand-violet/20">
-                        {course.instructor.user.image ? (
+                        {course.instructor?.user?.image ? (
                           <Image
                             src={course.instructor.user.image}
-                            alt={course.instructor.user.name}
+                            alt={course.instructor.user.name || ""}
                             fill
                             className="object-cover"
                           />
                         ) : (
                           <div className="absolute inset-0 bg-brand-violet/10 flex items-center justify-center text-brand-violet font-bold text-xs">
-                            {course.instructor.user.name[0]}
+                            {course.instructor?.user?.name?.[0] || ""}
                           </div>
                         )}
                       </div>
                       <div className="text-xs">
                         <p className="text-text-muted">المدرب</p>
-                        <p className="font-semibold text-text-primary">{course.instructor.user.name}</p>
+                        <p className="font-semibold text-text-primary">{course.instructor?.user?.name || ""}</p>
                       </div>
                     </div>
 
