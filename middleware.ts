@@ -10,7 +10,11 @@ export default NextAuth(authConfig).auth((req) => {
   const isOnAdmin = nextUrl.pathname.startsWith("/admin") || nextUrl.pathname.startsWith("/dashboard/admin");
   const isOnInstructor = nextUrl.pathname.startsWith("/dashboard/instructor");
   const isOnStudent = nextUrl.pathname.startsWith("/dashboard/student");
-  const isOnAuth = nextUrl.pathname.startsWith("/login") || nextUrl.pathname.startsWith("/register");
+  const isOnAuth =
+    nextUrl.pathname.startsWith("/login") ||
+    nextUrl.pathname.startsWith("/register") ||
+    nextUrl.pathname.startsWith("/forgot-password") ||
+    nextUrl.pathname.startsWith("/reset-password");
 
   if (isOnAuth) {
     if (isLoggedIn) {
@@ -43,9 +47,9 @@ export default NextAuth(authConfig).auth((req) => {
       return NextResponse.redirect(new URL("/", nextUrl));
     }
     if (isOnInstructor && user?.role !== "INSTRUCTOR") {
-      // Allow if they are on onboarding page to apply
       const isOnboarding = nextUrl.pathname === "/dashboard/instructor/onboarding";
-      if (!isOnboarding) {
+      const isInstructorHome = nextUrl.pathname === "/dashboard/instructor";
+      if (!isOnboarding && !isInstructorHome) {
         return NextResponse.redirect(new URL("/", nextUrl));
       }
     }

@@ -2,14 +2,17 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import CoursePlayerClient from "./CoursePlayerClient";
+import { resolveSecureVideo } from "@/lib/video/secure-video";
+import type { SecureVideoEmbed } from "@/lib/video/secure-video";
 
 export const revalidate = 0;
 
 export default async function StudentCoursePlayerPage({
   params,
 }: {
-  params: { courseId: string; lessonId: string };
+  params: Promise<{ courseId: string; lessonId: string }>;
 }) {
+  const { courseId, lessonId } = await params;
   const session = await auth();
   if (!session || !session.user || !session.user.id) {
     redirect("/login");
@@ -19,7 +22,7 @@ export default async function StudentCoursePlayerPage({
   const enrollment = await db.enrollment.findFirst({
     where: {
       userId: session.user.id,
-      courseId: params.courseId,
+      courseId,
     },
     include: {
       progress: {
@@ -43,7 +46,7 @@ export default async function StudentCoursePlayerPage({
 
   const isInstructorOfCourse = instructorRecord
     ? await db.course.findFirst({
-        where: { id: params.courseId, instructorId: instructorRecord.id },
+        where: { id: courseId, instructorId: instructorRecord.id },
       })
     : null;
 
@@ -54,7 +57,7 @@ export default async function StudentCoursePlayerPage({
 
   // 2. Fetch course details with sections and lessons
   const course = await db.course.findUnique({
-    where: { id: params.courseId },
+    where: { id: courseId },
     include: {
       sections: {
         orderBy: { order: "asc" },
@@ -73,13 +76,13 @@ export default async function StudentCoursePlayerPage({
 
   // 3. Find active lesson
   const allLessons = course.sections.flatMap((s) => s.lessons);
-  const activeLesson = allLessons.find((l) => l.id === params.lessonId);
+  const activeLesson = allLessons.find((l) => l.id === lessonId);
 
   if (!activeLesson) {
     // Redirect to first lesson of the course if requested lesson id is invalid
     const firstLesson = allLessons[0];
     if (firstLesson) {
-      redirect(`/dashboard/student/learn/${params.courseId}/${firstLesson.id}`);
+      redirect(`/dashboard/student/learn/${courseId}/${firstLesson.id}`);
     } else {
       redirect("/dashboard/student");
     }
@@ -87,12 +90,30 @@ export default async function StudentCoursePlayerPage({
 
   const completedLessonIds = enrollment ? enrollment.progress.map((p) => p.lessonId) : [];
 
+  const secureEmbed: SecureVideoEmbed = await resolveSecureVideo(activeLesson);
+
+  const sectionsForClient = course.sections.map((section) => ({
+    ...section,
+    lessons: section.lessons.map(({ id, title, duration, order }) => ({
+      id,
+      title,
+      duration,
+      order,
+    })),
+  }));
+
   return (
     <CoursePlayerClient
       courseId={course.id}
       courseTitle={course.title}
-      sections={course.sections}
-      activeLesson={activeLesson}
+      sections={sectionsForClient}
+      activeLesson={{
+        id: activeLesson.id,
+        title: activeLesson.title,
+        duration: activeLesson.duration,
+        order: activeLesson.order,
+      }}
+      secureEmbed={secureEmbed}
       enrollmentId={enrollment?.id || "admin_bypass"}
       completedLessonIds={completedLessonIds}
     />

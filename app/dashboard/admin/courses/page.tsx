@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import CoursesClient from "./CoursesClient";
+import { serializeCoursePrice } from "@/lib/serialize-client";
 
 export const revalidate = 0;
 
@@ -54,7 +55,10 @@ export default async function AdminCoursesPage() {
         </p>
       </div>
 
-      <CoursesClient initialCourses={courses} instructors={instructors} />
+      <CoursesClient
+        initialCourses={courses.map(serializeCoursePrice)}
+        instructors={instructors}
+      />
     </div>
   );
 }

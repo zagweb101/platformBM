@@ -3,26 +3,82 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { calculateInstructorShare, toNumber } from "@/lib/money";
+import { sendPaymentApprovedEmail } from "@/lib/email";
+import { z } from "zod";
 
-export async function uploadReceipt(courseId: string, amount: number, receiptUrl: string) {
+const ReceiptSchema = z.object({
+  courseId: z.string().min(1),
+  receiptUrl: z.string().url("رابط الإيصال غير صالح"),
+});
+
+export async function uploadReceipt(courseId: string, receiptUrl: string) {
   const session = await auth();
   if (!session || !session.user || !session.user.id) {
     return { error: "غير مصرح لك بالوصول. يرجى تسجيل الدخول أولاً." };
   }
 
+  const parsed = ReceiptSchema.safeParse({ courseId, receiptUrl });
+  if (!parsed.success) {
+    return { error: "البيانات المدخلة غير صالحة." };
+  }
+
   try {
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+    });
+
+    if (!course || course.status !== "PUBLISHED") {
+      return { error: "الدورة غير متاحة للاشتراك." };
+    }
+
+    const existingEnrollment = await db.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId,
+        },
+      },
+    });
+
+    if (existingEnrollment) {
+      return { error: "أنت مشترك بالفعل في هذه الدورة." };
+    }
+
+    const pendingPayment = await db.payment.findFirst({
+      where: {
+        userId: session.user.id,
+        courseId,
+        status: "PENDING",
+      },
+    });
+
+    if (pendingPayment) {
+      return { error: "لديك طلب تفعيل معلّق لهذه الدورة بالفعل." };
+    }
+
+    const amount = course.price;
+
     const payment = await db.payment.create({
       data: {
         userId: session.user.id,
         courseId,
         amount,
         receiptUrl,
+        method: "BANK_TRANSFER",
         status: "PENDING",
       },
     });
 
     revalidatePath("/dashboard/student/payments");
-    return { success: "تم رفع إيصال الدفع بنجاح وهو قيد المراجعة الآن.", payment };
+    return {
+      success: "تم رفع إيصال الدفع بنجاح وهو قيد المراجعة الآن.",
+      payment: {
+        id: payment.id,
+        amount: toNumber(payment.amount),
+        receiptUrl: payment.receiptUrl ?? "",
+      },
+    };
   } catch (error) {
     console.error("Upload receipt error:", error);
     return { error: "حدث خطأ أثناء رفع إيصال الدفع." };
@@ -36,7 +92,6 @@ export async function approvePayment(paymentId: string) {
   }
 
   try {
-    // 1. Fetch payment with user and course info
     const payment = await db.payment.findUnique({
       where: { id: paymentId },
       include: {
@@ -61,39 +116,47 @@ export async function approvePayment(paymentId: string) {
       return { error: "سجل الدفع هذا غير مرتبط بدورة تدريبية." };
     }
 
-    const { course, userId, amount } = payment;
+    const { course, userId } = payment;
     const instructor = course.instructor;
 
     if (!instructor) {
       return { error: "لم يتم العثور على مدرس لهذه الدورة." };
     }
 
-    // 2. Calculate instructor share
-    const instructorShare = amount * (instructor.revenueShare / 100);
+    const expectedAmount = toNumber(course.price);
+    const paidAmount = toNumber(payment.amount);
 
-    // 3. Execute prisma transaction
+    if (Math.abs(paidAmount - expectedAmount) > 0.01) {
+      return {
+        error: `المبلغ المدفوع (${paidAmount} ر.س) لا يطابق سعر الدورة (${expectedAmount} ر.س).`,
+      };
+    }
+
+    const instructorShare = calculateInstructorShare(
+      payment.amount,
+      instructor.revenueShare
+    );
+
     await db.$transaction(async (tx) => {
-      // 1. Set payment status = APPROVED
       await tx.payment.update({
         where: { id: paymentId },
         data: { status: "APPROVED" },
       });
 
-      // 2. Create Enrollment record (if not already exists)
-      const existingEnrollment = await tx.enrollment.findFirst({
-        where: { userId, courseId: course.id },
-      });
-
-      if (!existingEnrollment) {
-        await tx.enrollment.create({
-          data: {
+      await tx.enrollment.upsert({
+        where: {
+          userId_courseId: {
             userId,
             courseId: course.id,
           },
-        });
-      }
+        },
+        create: {
+          userId,
+          courseId: course.id,
+        },
+        update: {},
+      });
 
-      // 3. Add calculated amount to instructor.walletBalance
       await tx.instructor.update({
         where: { id: instructor.id },
         data: {
@@ -103,7 +166,6 @@ export async function approvePayment(paymentId: string) {
         },
       });
 
-      // 4. Create WalletTransaction record with type CREDIT
       await tx.walletTransaction.create({
         data: {
           instructorId: instructor.id,
@@ -113,6 +175,10 @@ export async function approvePayment(paymentId: string) {
         },
       });
     });
+
+    if (payment.user.email && course.title) {
+      await sendPaymentApprovedEmail(payment.user.email, course.title);
+    }
 
     revalidatePath("/dashboard/admin/payments");
     revalidatePath("/dashboard/student/payments");

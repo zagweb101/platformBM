@@ -94,7 +94,7 @@ export default function AdminCourseBuilderClient({
         status,
       });
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم تحديث تفاصيل الدورة بنجاح.");
@@ -108,9 +108,9 @@ export default function AdminCourseBuilderClient({
     const order = course.sections.length + 1;
     startTransition(async () => {
       const res = await createSection(course.id, newSectionTitle, order);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
-      } else if (res.section) {
+      } else if ("section" in res && res.section) {
         toast.success("تم إضافة القسم بنجاح.");
         setCourse((prev) => ({
           ...prev,
@@ -133,7 +133,7 @@ export default function AdminCourseBuilderClient({
     if (!editingSectionTitle) return;
     startTransition(async () => {
       const res = await updateSection(sectionId, editingSectionTitle, 1);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم تحديث عنوان القسم.");
@@ -152,7 +152,7 @@ export default function AdminCourseBuilderClient({
     if (!confirm("هل أنت متأكد من حذف القسم وجميع دروسه نهائيًا؟")) return;
     startTransition(async () => {
       const res = await deleteSection(sectionId);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم حذف القسم.");
@@ -179,9 +179,9 @@ export default function AdminCourseBuilderClient({
         order,
       });
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
-      } else if (res.lesson) {
+      } else if ("lesson" in res && res.lesson) {
         toast.success("تم إضافة الدرس بنجاح.");
         setCourse((prev) => ({
           ...prev,
@@ -223,7 +223,7 @@ export default function AdminCourseBuilderClient({
         duration: editingLessonDuration || 0,
       });
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم تحديث تفاصيل الدرس.");
@@ -256,7 +256,7 @@ export default function AdminCourseBuilderClient({
     if (!confirm("هل أنت متأكد من حذف هذا الدرس؟")) return;
     startTransition(async () => {
       const res = await deleteLesson(lessonId);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم حذف الدرس.");
@@ -529,7 +529,7 @@ export default function AdminCourseBuilderClient({
                                 onChange={(e) =>
                                   setEditingLessonVideoUrl(e.target.value)
                                 }
-                                placeholder="رابط الفيديو (mp4)"
+                                placeholder="رابط الفيديو: mp4 أو cfstream:UID أو Vimeo"
                               />
                               <input
                                 type="number"
@@ -636,7 +636,7 @@ export default function AdminCourseBuilderClient({
                           />
                           <input
                             type="url"
-                            placeholder="رابط الفيديو (mp4)"
+                            placeholder="رابط الفيديو: mp4 أو cfstream:UID أو Vimeo"
                             className="px-3 py-1.5 rounded-lg border border-subtle bg-card text-xs focus:ring-1 focus:ring-brand-violet outline-none font-almarai"
                             value={newLessonVideoUrl}
                             onChange={(e) =>

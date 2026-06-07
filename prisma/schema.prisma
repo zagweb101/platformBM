@@ -19,6 +19,7 @@ model User {
   instructor    Instructor?
   enrollments   Enrollment[]
   payments      Payment[]
+  resetTokens   PasswordResetToken[]
 }
 
 enum Role {
@@ -33,8 +34,8 @@ model Instructor {
   user            User     @relation(fields: [userId], references: [id])
   bio             String?
   status          InstructorStatus @default(PENDING)
-  revenueShare    Float    @default(60)
-  walletBalance   Float    @default(0)
+  revenueShare    Decimal  @default(60) @db.Decimal(5, 2)
+  walletBalance   Decimal  @default(0) @db.Decimal(12, 2)
   courses         Course[]
   walletTx        WalletTransaction[]
 }
@@ -50,7 +51,7 @@ model Course {
   title         String
   description   String
   thumbnail     String?
-  price         Float
+  price         Decimal  @db.Decimal(10, 2)
   status        CourseStatus @default(DRAFT)
   instructorId  String
   instructor    Instructor   @relation(fields: [instructorId], references: [id])
@@ -77,14 +78,23 @@ model Section {
 }
 
 model Lesson {
-  id          String   @id @default(cuid())
-  title       String
-  videoUrl    String?
-  duration    Int?
-  order       Int
-  sectionId   String
-  section     Section  @relation(fields: [sectionId], references: [id])
-  progress    LessonProgress[]
+  id               String        @id @default(cuid())
+  title            String
+  videoUrl         String?
+  videoProvider    VideoProvider @default(DIRECT)
+  videoId          String?
+  videoPrivacyHash String?
+  duration         Int?
+  order            Int
+  sectionId        String
+  section          Section       @relation(fields: [sectionId], references: [id])
+  progress         LessonProgress[]
+}
+
+enum VideoProvider {
+  DIRECT
+  CLOUDFLARE_STREAM
+  VIMEO
 }
 
 model Enrollment {
@@ -95,6 +105,8 @@ model Enrollment {
   course    Course   @relation(fields: [courseId], references: [id])
   createdAt DateTime @default(now())
   progress  LessonProgress[]
+
+  @@unique([userId, courseId])
 }
 
 model LessonProgress {
@@ -110,12 +122,21 @@ model Payment {
   id          String        @id @default(cuid())
   userId      String
   courseId    String?
-  amount      Float
-  receiptUrl  String
+  amount      Decimal       @db.Decimal(10, 2)
+  receiptUrl  String?
+  method      PaymentMethod @default(BANK_TRANSFER)
+  externalId  String?
   status      PaymentStatus @default(PENDING)
   user        User          @relation(fields: [userId], references: [id])
   course      Course?       @relation(fields: [courseId], references: [id])
   createdAt   DateTime      @default(now())
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  MOYASAR
+  TAMARA
+  TABBY
 }
 
 enum PaymentStatus {
@@ -127,7 +148,7 @@ enum PaymentStatus {
 model WalletTransaction {
   id           String     @id @default(cuid())
   instructorId String
-  amount       Float
+  amount       Decimal  @db.Decimal(10, 2)
   type         TxType
   description  String?
   instructor   Instructor @relation(fields: [instructorId], references: [id])
@@ -137,4 +158,29 @@ model WalletTransaction {
 enum TxType {
   CREDIT
   DEBIT
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
 }

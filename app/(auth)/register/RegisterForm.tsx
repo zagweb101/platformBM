@@ -14,6 +14,9 @@ const RegisterSchema = z.object({
   name: z.string().min(2, "الاسم يجب أن يكون ثنائيًا على الأقل"),
   email: z.string().email("البريد الإلكتروني غير صالح"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+  acceptTerms: z.boolean().refine((v) => v === true, {
+    message: "يجب الموافقة على سياسة الخصوصية وشروط الاستخدام",
+  }),
 });
 
 type RegisterFormValues = z.infer<typeof RegisterSchema>;
@@ -45,12 +48,15 @@ export default function RegisterForm() {
       name: "",
       email: "",
       password: "",
+      acceptTerms: false,
     },
   });
 
   const onSubmit = (values: RegisterFormValues) => {
     startTransition(async () => {
-      const response = await registerUser(values);
+      const { acceptTerms, ...registerData } = values;
+      void acceptTerms;
+      const response = await registerUser(registerData);
       if (response.error) {
         toast.error(response.error);
       } else {
@@ -129,6 +135,30 @@ export default function RegisterForm() {
             <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
           )}
         </div>
+
+        <div className="flex items-start gap-2 pt-1">
+          <input
+            type="checkbox"
+            id="acceptTerms"
+            disabled={isPending}
+            className="mt-1 rounded border-subtle"
+            {...formRegister("acceptTerms")}
+          />
+          <label htmlFor="acceptTerms" className="text-xs text-text-secondary leading-relaxed">
+            أوافق على{" "}
+            <Link href="/privacy-policy" target="_blank" className="text-brand-indigo hover:underline font-semibold">
+              سياسة الخصوصية
+            </Link>{" "}
+            و{" "}
+            <Link href="/terms-of-service" target="_blank" className="text-brand-indigo hover:underline font-semibold">
+              شروط الاستخدام
+            </Link>
+            .
+          </label>
+        </div>
+        {errors.acceptTerms && (
+          <p className="text-xs text-red-500">{errors.acceptTerms.message}</p>
+        )}
 
         <button
           type="submit"

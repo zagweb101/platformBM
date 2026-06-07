@@ -2,14 +2,16 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import CourseBuilderClient from "./CourseBuilderClient";
+import { toNumber } from "@/lib/money";
 
 export const revalidate = 0;
 
 export default async function InstructorCourseBuilderPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
   if (!session || !session.user || !session.user.id) {
     redirect("/login");
@@ -17,7 +19,7 @@ export default async function InstructorCourseBuilderPage({
 
   // Fetch course details with sections and lessons
   const course = await db.course.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       instructor: true,
       sections: {
@@ -50,7 +52,7 @@ export default async function InstructorCourseBuilderPage({
         title: course.title,
         description: course.description,
         thumbnail: course.thumbnail,
-        price: course.price,
+        price: toNumber(course.price),
         status: course.status,
         sections: course.sections,
       }}

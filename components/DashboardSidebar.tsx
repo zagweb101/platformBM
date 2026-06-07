@@ -81,6 +81,11 @@ export default function DashboardSidebar({ role, userName }: SidebarProps) {
             label: "سجل المدفوعات والاشتراك",
             icon: FileCheck,
           },
+          {
+            href: "/dashboard/instructor/onboarding",
+            label: "التقديم كمدرب",
+            icon: Sparkles,
+          },
         ];
     }
   };

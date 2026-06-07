@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import PaymentsClient from "./PaymentsClient";
+import { serializePaymentAmount } from "@/lib/serialize-client";
 
 export const revalidate = 0; // Disable static cache to reflect new payments instantly
 
@@ -38,7 +39,13 @@ export default async function AdminPaymentsPage() {
         </p>
       </div>
 
-      <PaymentsClient initialPayments={payments} />
+      <PaymentsClient
+        initialPayments={payments.map((p) => ({
+          ...serializePaymentAmount(p),
+          receiptUrl: p.receiptUrl,
+          method: p.method,
+        }))}
+      />
     </div>
   );
 }

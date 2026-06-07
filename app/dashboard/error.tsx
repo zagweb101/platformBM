@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { AlertCircle, RotateCcw } from "lucide-react";
 
 export default function DashboardError({
@@ -30,12 +31,12 @@ export default function DashboardError({
             <RotateCcw className="w-4 h-4" />
             إعادة المحاولة
           </button>
-          <a
+          <Link
             href="/"
             className="px-5 py-2 rounded-xl border border-subtle bg-secondary hover:bg-gray-100 dark:hover:bg-dark-elevated text-xs font-semibold transition-colors"
           >
             الرجوع للرئيسية
-          </a>
+          </Link>
         </div>
       </div>
     </div>

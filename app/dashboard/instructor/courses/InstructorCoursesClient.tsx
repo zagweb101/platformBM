@@ -45,11 +45,10 @@ export default function InstructorCoursesClient({ initialCourses }: { initialCou
         thumbnail: thumbnail || undefined,
       });
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
-      } else {
+      } else if ("courseId" in res && res.courseId) {
         toast.success(res.success || "تم إنشاء مسودة الدورة بنجاح!");
-        // Refresh local courses or redirect to course builder
         window.location.href = `/dashboard/instructor/courses/${res.courseId}`;
       }
     });

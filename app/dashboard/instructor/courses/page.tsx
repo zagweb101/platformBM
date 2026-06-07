@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import InstructorCoursesClient from "./InstructorCoursesClient";
+import { serializeCoursePrice } from "@/lib/serialize-client";
 
 export const revalidate = 0;
 
@@ -34,5 +35,5 @@ export default async function InstructorCoursesPage() {
     },
   });
 
-  return <InstructorCoursesClient initialCourses={courses} />;
+  return <InstructorCoursesClient initialCourses={courses.map(serializeCoursePrice)} />;
 }

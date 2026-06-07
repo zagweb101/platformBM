@@ -10,10 +10,11 @@ import CtaBanner from "@/components/landing/CtaBanner";
 import AboutSection from "@/components/landing/AboutSection";
 import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
+import { serializeCoursePrice } from "@/lib/serialize-client";
 
 export default async function Home() {
   // Get all published courses from the database
-  const courses = await db.course.findMany({
+  const coursesRaw = await db.course.findMany({
     where: { status: "PUBLISHED" },
     include: {
       instructor: {
@@ -23,6 +24,8 @@ export default async function Home() {
       },
     },
   });
+
+  const courses = coursesRaw.map(serializeCoursePrice);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex flex-col selection:bg-brand-indigo/30 selection:text-white">

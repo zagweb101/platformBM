@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { markLessonComplete } from "@/actions/progress.actions";
 import { toast } from "sonner";
+import SecureVideoPlayer from "@/components/SecureVideoPlayer";
+import type { SecureVideoEmbed } from "@/lib/video/secure-video";
 import {
   Play,
   CheckCircle,
@@ -19,7 +21,6 @@ import Link from "next/link";
 interface Lesson {
   id: string;
   title: string;
-  videoUrl: string | null;
   duration: number | null;
   order: number;
 }
@@ -36,6 +37,7 @@ interface CoursePlayerProps {
   courseTitle: string;
   sections: Section[];
   activeLesson: Lesson;
+  secureEmbed: SecureVideoEmbed;
   enrollmentId: string;
   completedLessonIds: string[];
 }
@@ -45,6 +47,7 @@ export default function CoursePlayerClient({
   courseTitle,
   sections,
   activeLesson,
+  secureEmbed,
   enrollmentId,
   completedLessonIds: initialCompletedIds,
 }: CoursePlayerProps) {
@@ -57,7 +60,7 @@ export default function CoursePlayerClient({
     const targetStatus = !isCompleted;
     startTransition(async () => {
       const res = await markLessonComplete(enrollmentId, activeLesson.id, targetStatus);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success(targetStatus ? "تهانينا! تم إكمال الدرس بنجاح." : "تم إلغاء تحديد إكمال الدرس.");
@@ -96,11 +99,10 @@ export default function CoursePlayerClient({
         {/* Center/Left: Video Player & Info */}
         <div className="lg:col-span-2 space-y-4">
           <div className="card-brand bg-black aspect-video relative overflow-hidden rounded-2xl shadow-xl flex items-center justify-center">
-            {activeLesson.videoUrl ? (
-              <video
-                src={activeLesson.videoUrl}
-                controls
-                className="w-full h-full object-contain"
+            {secureEmbed.type !== "none" ? (
+              <SecureVideoPlayer
+                embed={secureEmbed}
+                title={activeLesson.title}
                 poster="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80"
               />
             ) : (

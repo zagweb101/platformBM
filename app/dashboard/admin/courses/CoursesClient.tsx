@@ -69,7 +69,7 @@ export default function CoursesClient({
     startTransition(async () => {
       const res = await updateCourse(id, { status: newStatus });
       setProcessingId(null);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success("تم تحديث حالة الدورة بنجاح.");
@@ -96,11 +96,10 @@ export default function CoursesClient({
         instructorId: selectedInstructorId || undefined,
       });
 
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
-      } else {
+      } else if ("courseId" in res && res.courseId) {
         toast.success(res.success || "تم إنشاء الدورة بنجاح!");
-        // Redirect to course builder
         window.location.href = `/dashboard/admin/courses/${res.courseId}`;
       }
     });
@@ -118,7 +117,7 @@ export default function CoursesClient({
     startTransition(async () => {
       const res = await deleteCourse(courseId);
       setProcessingId(null);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success(res.success || "تم حذف الدورة.");

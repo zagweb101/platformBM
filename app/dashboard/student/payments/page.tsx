@@ -2,6 +2,14 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import StudentPaymentsClient from "./StudentPaymentsClient";
+import {
+  serializeCoursePrice,
+  serializePaymentAmount,
+} from "@/lib/serialize-client";
+import { isMoyasarConfigured } from "@/lib/moyasar";
+import { isTamaraConfigured } from "@/lib/tamara";
+import { isTabbyConfigured } from "@/lib/tabby";
+import { Suspense } from "react";
 
 export const revalidate = 0;
 
@@ -43,7 +51,19 @@ export default async function StudentPaymentsPage() {
         </p>
       </div>
 
-      <StudentPaymentsClient courses={courses} initialHistory={payments} />
+      <Suspense fallback={<div className="text-sm text-text-muted">جاري التحميل...</div>}>
+        <StudentPaymentsClient
+          courses={courses.map(serializeCoursePrice)}
+          initialHistory={payments.map((p) => ({
+            ...serializePaymentAmount(p),
+            receiptUrl: p.receiptUrl,
+            method: p.method,
+          }))}
+          moyasarEnabled={isMoyasarConfigured()}
+          tamaraEnabled={isTamaraConfigured()}
+          tabbyEnabled={isTabbyConfigured()}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import Link from "next/link";
+import { toNumber } from "@/lib/money";
 
 export default async function AdminDashboardPage() {
   const session = await auth();
@@ -30,8 +31,14 @@ export default async function AdminDashboardPage() {
     where: { status: "PENDING" }
   });
 
-  const totalRevenue = approvedPayments.reduce((acc, curr) => acc + curr.amount, 0);
-  const pendingRevenue = pendingPayments.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalRevenue = approvedPayments.reduce(
+    (acc, curr) => acc + toNumber(curr.amount),
+    0
+  );
+  const pendingRevenue = pendingPayments.reduce(
+    (acc, curr) => acc + toNumber(curr.amount),
+    0
+  );
 
   return (
     <div className="space-y-8">

@@ -34,7 +34,7 @@ export default function InstructorOnboardingPage() {
   const onSubmit = (values: OnboardingValues) => {
     startTransition(async () => {
       const res = await applyAsInstructor(values);
-      if (res.error) {
+      if ("error" in res && res.error) {
         toast.error(res.error);
       } else {
         toast.success(res.success || "تم تقديم الطلب!");

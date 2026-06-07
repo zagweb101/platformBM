@@ -10,6 +10,8 @@ import {
   ChevronLeft
 } from "lucide-react";
 import Link from "next/link";
+import { toNumber } from "@/lib/money";
+import { serializeWalletTxAmount } from "@/lib/serialize-client";
 
 export default async function InstructorDashboardPage() {
   const session = await auth();
@@ -99,6 +101,9 @@ export default async function InstructorDashboardPage() {
   // If APPROVED, render full dashboard
   const coursesCount = instructor.courses.length;
   const totalStudents = instructor.courses.reduce((acc, curr) => acc + curr._count.enrollments, 0);
+  const walletBalance = toNumber(instructor.walletBalance);
+  const revenueShare = toNumber(instructor.revenueShare);
+  const walletTransactions = instructor.walletTx.map(serializeWalletTxAmount);
 
   return (
     <div className="space-y-8">
@@ -117,9 +122,9 @@ export default async function InstructorDashboardPage() {
             <Wallet className="w-5 h-5 text-brand-indigo" />
           </div>
           <div className="mt-4">
-            <div className="stat-number font-almarai">{instructor.walletBalance.toFixed(2)} ر.س</div>
+            <div className="stat-number font-almarai">{walletBalance.toFixed(2)} ر.س</div>
             <p className="text-xs text-text-muted mt-1">
-              نسبة أرباحك الحالية: <strong className="text-brand-fuchsia font-almarai">%{instructor.revenueShare}</strong>
+              نسبة أرباحك الحالية: <strong className="text-brand-fuchsia font-almarai">%{revenueShare}</strong>
             </p>
           </div>
         </div>
@@ -169,14 +174,14 @@ export default async function InstructorDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle text-sm">
-                {instructor.walletTx.length === 0 ? (
+                {walletTransactions.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="p-8 text-center text-text-muted">
                       لا توجد أرباح أو معاملات مسجلة في محفظتك بعد.
                     </td>
                   </tr>
                 ) : (
-                  instructor.walletTx.map((tx) => (
+                  walletTransactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-secondary/20 transition-colors">
                       <td className="p-4 font-semibold text-text-primary">
                         {tx.description || "معاملة مالية"}
