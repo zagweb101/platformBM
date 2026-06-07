@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { register as registerUser } from "@/actions/auth.actions";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -20,8 +20,17 @@ type RegisterFormValues = z.infer<typeof RegisterSchema>;
 
 export default function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/";
+  const [from, setFrom] = useState("/");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const fromParam = params.get("from");
+      if (fromParam) {
+        setFrom(fromParam);
+      }
+    }
+  }, []);
 
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
