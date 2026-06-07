@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          Role     @default(STUDENT)
+  image         String?
+  createdAt     DateTime @default(now())
+  
+  instructor    Instructor?
+  enrollments   Enrollment[]
+  payments      Payment[]
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+
+model Instructor {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  bio             String?
+  status          InstructorStatus @default(PENDING)
+  revenueShare    Float    @default(60)
+  walletBalance   Float    @default(0)
+  courses         Course[]
+  walletTx        WalletTransaction[]
+}
+
+enum InstructorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Course {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  thumbnail     String?
+  price         Float
+  status        CourseStatus @default(DRAFT)
+  instructorId  String
+  instructor    Instructor   @relation(fields: [instructorId], references: [id])
+  sections      Section[]
+  enrollments   Enrollment[]
+  payments      Payment[]
+  createdAt     DateTime @default(now())
+}
+
+enum CourseStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  HIDDEN
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  videoUrl    String?
+  duration    Int?
+  order       Int
+  sectionId   String
+  section     Section  @relation(fields: [sectionId], references: [id])
+  progress    LessonProgress[]
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+  progress  LessonProgress[]
+}
+
+model LessonProgress {
+  id           String     @id @default(cuid())
+  enrollmentId String
+  lessonId     String
+  completed    Boolean    @default(false)
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
+  lesson       Lesson     @relation(fields: [lessonId], references: [id])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  userId      String
+  courseId    String?
+  amount      Float
+  receiptUrl  String
+  status      PaymentStatus @default(PENDING)
+  user        User          @relation(fields: [userId], references: [id])
+  course      Course?       @relation(fields: [courseId], references: [id])
+  createdAt   DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model WalletTransaction {
+  id           String     @id @default(cuid())
+  instructorId String
+  amount       Float
+  type         TxType
+  description  String?
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+enum TxType {
+  CREDIT
+  DEBIT
+}
