@@ -43,6 +43,114 @@ export async function createCourse(data: {
   }
 }
 
+export async function adminCreateCourse(data: {
+  title: string;
+  description: string;
+  price: number;
+  thumbnail?: string;
+  instructorId?: string;
+}) {
+  const session = await auth();
+  if (!session || !session.user || !session.user.id || session.user.role !== "ADMIN") {
+    return { error: "غير مصرح لك بالوصول. هذه العملية متاحة للمدير فقط." };
+  }
+
+  try {
+    let instructorId = data.instructorId;
+
+    // If no specific instructor selected, use/create admin's own instructor record
+    if (!instructorId) {
+      let adminInstructor = await db.instructor.findUnique({
+        where: { userId: session.user.id },
+      });
+
+      if (!adminInstructor) {
+        adminInstructor = await db.instructor.create({
+          data: {
+            userId: session.user.id,
+            bio: "مدير المنصة",
+            status: "APPROVED",
+            revenueShare: 100,
+          },
+        });
+      }
+
+      instructorId = adminInstructor.id;
+    }
+
+    const course = await db.course.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        thumbnail: data.thumbnail || null,
+        instructorId: instructorId,
+        status: "PUBLISHED",
+      },
+    });
+
+    revalidatePath("/dashboard/admin/courses");
+    return { success: "تم إنشاء الدورة بنجاح.", courseId: course.id };
+  } catch (error) {
+    console.error("Admin create course error:", error);
+    return { error: "حدث خطأ أثناء إنشاء الدورة." };
+  }
+}
+
+export async function deleteCourse(courseId: string) {
+  const session = await auth();
+  if (!session || !session.user || session.user.role !== "ADMIN") {
+    return { error: "غير مصرح لك بالوصول." };
+  }
+
+  try {
+    // Delete in order: progress -> enrollments -> lessons -> sections -> payments -> course
+    const sections = await db.section.findMany({
+      where: { courseId },
+      select: { id: true },
+    });
+    const sectionIds = sections.map((s) => s.id);
+
+    // Delete lesson progress for all enrollments of this course
+    const enrollments = await db.enrollment.findMany({
+      where: { courseId },
+      select: { id: true },
+    });
+    const enrollmentIds = enrollments.map((e) => e.id);
+
+    if (enrollmentIds.length > 0) {
+      await db.lessonProgress.deleteMany({
+        where: { enrollmentId: { in: enrollmentIds } },
+      });
+    }
+
+    // Delete enrollments
+    await db.enrollment.deleteMany({ where: { courseId } });
+
+    // Delete lessons
+    if (sectionIds.length > 0) {
+      await db.lesson.deleteMany({
+        where: { sectionId: { in: sectionIds } },
+      });
+    }
+
+    // Delete sections
+    await db.section.deleteMany({ where: { courseId } });
+
+    // Delete payments
+    await db.payment.deleteMany({ where: { courseId } });
+
+    // Delete course
+    await db.course.delete({ where: { id: courseId } });
+
+    revalidatePath("/dashboard/admin/courses");
+    return { success: "تم حذف الدورة بنجاح." };
+  } catch (error) {
+    console.error("Delete course error:", error);
+    return { error: "حدث خطأ أثناء حذف الدورة." };
+  }
+}
+
 export async function updateCourse(
   courseId: string,
   data: {

@@ -33,16 +33,28 @@ export default async function AdminCoursesPage() {
     },
   });
 
+  // Fetch approved instructors for the create course dropdown
+  const instructors = await db.instructor.findMany({
+    where: { status: "APPROVED" },
+    include: {
+      user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-black text-text-primary mb-1">إدارة واعتماد الدورات</h2>
         <p className="text-sm text-text-secondary">
-          تصفح الدورات التي تم إنشاؤها وتعديلها بواسطة المدربين بالمنصة، وقم بتفعيل نشرها أو إخفائها عن الطلاب.
+          أنشئ دورات جديدة، أو تصفح الدورات التي تم إنشاؤها بواسطة المدربين. يمكنك تعديل محتواها أو نشرها أو إخفائها.
         </p>
       </div>
 
-      <CoursesClient initialCourses={courses} />
+      <CoursesClient initialCourses={courses} instructors={instructors} />
     </div>
   );
 }
