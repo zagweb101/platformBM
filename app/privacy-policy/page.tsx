@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-gray-300">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-right">
+      <main id="main-content" tabIndex={-1} className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-start">
         <h1 className="text-3xl sm:text-4xl font-black text-white font-cairo mb-2">
           سياسة الخصوصية
         </h1>

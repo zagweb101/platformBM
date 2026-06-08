@@ -6,36 +6,32 @@ import * as z from "zod";
 import { login } from "@/actions/auth.actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState, useTransition, useEffect } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Button } from "@/components/ui/Button";
+import {
+  buildAuthQuery,
+  useAuthRedirectParam,
+} from "@/components/auth/useAuthRedirectParam";
 
 const LoginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صالح"),
   password: z.string().min(1, "كلمة المرور مطلوبة"),
+  rememberMe: z.boolean().optional(),
 });
 
 type LoginFormValues = z.infer<typeof LoginSchema>;
 
 export default function LoginForm() {
   const router = useRouter();
-  const [from, setFrom] = useState("/");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const fromParam = params.get("from");
-      if (fromParam) {
-        setFrom(fromParam);
-      }
-    }
-  }, []);
-
+  const redirectTo = useAuthRedirectParam("/");
   const [isPending, startTransition] = useTransition();
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
-    register: formRegister,
+    register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormValues>({
@@ -43,109 +39,92 @@ export default function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false,
     },
   });
 
   const onSubmit = (values: LoginFormValues) => {
     startTransition(async () => {
-      const response = await login(values);
+      const response = await login({
+        email: values.email,
+        password: values.password,
+      });
       if (response?.error) {
         toast.error(response.error);
       } else {
         toast.success(response?.success || "تم تسجيل الدخول بنجاح!");
-        
-        // NextAuth router refresh to fetch session
         router.refresh();
-        
-        // Wait briefly for middleware session refresh, then redirect
         setTimeout(() => {
-          router.push(from);
+          router.push(redirectTo);
         }, 150);
       }
     });
   };
 
+  const authQuery = buildAuthQuery(redirectTo);
+
   return (
     <div>
-      <h2 className="text-2xl font-black text-center text-text-primary mb-2">
-        تسجيل الدخول
-      </h2>
-      <p className="text-xs text-center text-text-secondary mb-6">
-        أهلاً بك مجدداً في بيت المصور
-      </p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#151525] font-heading sm:text-3xl">
+          مرحباً بعودتك
+        </h1>
+        <p className="mt-2 text-sm text-text-secondary font-body">
+          سجّل دخولك لمتابعة تعلمك
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            البريد الإلكتروني
-          </label>
-          <input
-            type="email"
-            disabled={isPending}
-            placeholder="name@example.com"
-            className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm focus:border-brand-violet focus:ring-1 focus:ring-brand-violet outline-none transition-all text-text-primary"
-            {...formRegister("email")}
-          />
-          {errors.email && (
-            <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            كلمة المرور
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              disabled={isPending}
-              placeholder="••••••••"
-              className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm focus:border-brand-violet focus:ring-1 focus:ring-brand-violet outline-none transition-all text-text-primary pl-10"
-              {...formRegister("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 left-3 flex items-center text-text-muted hover:text-text-primary transition-colors"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
-          )}
-          <div className="mt-1.5 text-left">
-            <Link
-              href="/forgot-password"
-              className="text-xs text-brand-indigo hover:text-brand-fuchsia font-semibold"
-            >
-              نسيت كلمة المرور؟
-            </Link>
-          </div>
-        </div>
-
-        <button
-          type="submit"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <Input
+          label="البريد الإلكتروني"
+          type="email"
+          autoComplete="email"
           disabled={isPending}
-          className="btn-primary w-full flex items-center justify-center gap-2 text-sm mt-6"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            "تسجيل الدخول"
-          )}
-        </button>
+          error={errors.email?.message}
+          icon={<Mail className="h-5 w-5" aria-hidden="true" />}
+          {...register("email")}
+        />
+
+        <PasswordInput
+          label="كلمة المرور"
+          autoComplete="current-password"
+          disabled={isPending}
+          error={errors.password?.message}
+          {...register("password")}
+        />
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-body">
+            <input
+              type="checkbox"
+              disabled={isPending}
+              className="h-4 w-4 rounded border-border-default text-brand-violet-600 focus:ring-brand-violet-600"
+              {...register("rememberMe")}
+            />
+            <span className="text-[#151525]">تذكرني</span>
+          </label>
+          <Link
+            href="/forgot-password"
+            className="text-sm font-semibold text-brand-violet-600 hover:underline font-body"
+          >
+            نسيت كلمة المرور؟
+          </Link>
+        </div>
+
+        <Button type="submit" variant="primary" size="lg" loading={isPending} className="w-full">
+          تسجيل الدخول
+        </Button>
       </form>
 
-      <div className="mt-6 text-center text-xs text-text-secondary">
+      <p className="mt-8 text-center text-sm text-text-secondary font-body">
         ليس لديك حساب؟{" "}
         <Link
-          href={`/register${from !== "/" ? `?from=${encodeURIComponent(from)}` : ""}`}
-          className="font-bold text-brand-indigo hover:text-brand-fuchsia transition-colors"
+          href={`/register${authQuery}`}
+          className="font-semibold text-brand-violet-600 hover:underline"
         >
-          إنشاء حساب جديد
+          أنشئ حساباً
         </Link>
-      </div>
+      </p>
     </div>
   );
 }

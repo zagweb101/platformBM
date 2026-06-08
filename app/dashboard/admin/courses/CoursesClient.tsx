@@ -14,6 +14,17 @@ import {
   BookOpen,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  AdminDesktopTable,
+  AdminMobileCard,
+  AdminMobileList,
+  AdminTableScroll,
+} from "@/components/dashboard/admin/AdminTableMobile";
+import {
+  AdminDesktopActions,
+  AdminMobileActions,
+  type AdminActionItem,
+} from "@/components/dashboard/admin/AdminActionsMenu";
 
 interface InstructorItem {
   id: string;
@@ -134,8 +145,71 @@ export default function CoursesClient({
     setSelectedInstructorId("");
   };
 
+  const courseStatusBadge = (status: CourseItem["status"]) => (
+    <span
+      className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+        status === "DRAFT"
+          ? "badge-pending"
+          : status === "PENDING"
+            ? "bg-amber-500/10 text-amber-500"
+            : status === "PUBLISHED"
+              ? "badge-approved"
+              : "badge-rejected"
+      }`}
+    >
+      {status === "DRAFT" && "مسودة"}
+      {status === "PENDING" && "بانتظار المراجعة"}
+      {status === "PUBLISHED" && "منشورة"}
+      {status === "HIDDEN" && "مخفية"}
+    </span>
+  );
+
+  const getCourseActions = (course: CourseItem): AdminActionItem[] => {
+    const loading = isPending && processingId === course.id;
+    const actions: AdminActionItem[] = [
+      {
+        id: "edit",
+        label: "تعديل",
+        onClick: () => {
+          window.location.href = `/dashboard/admin/courses/${course.id}`;
+        },
+      },
+    ];
+
+    if (course.status !== "PUBLISHED") {
+      actions.push({
+        id: "publish",
+        label: "نشر",
+        onClick: () => handleStatusChange(course.id, "PUBLISHED"),
+        disabled: loading,
+        loading,
+      });
+    }
+
+    if (course.status === "PUBLISHED") {
+      actions.push({
+        id: "hide",
+        label: "إخفاء",
+        onClick: () => handleStatusChange(course.id, "HIDDEN"),
+        disabled: loading,
+        loading,
+      });
+    }
+
+    actions.push({
+      id: "delete",
+      label: "حذف",
+      onClick: () => handleDelete(course.id, course.title),
+      disabled: loading,
+      loading,
+      variant: "danger",
+    });
+
+    return actions;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 admin-form-shell">
       {/* Action Bar */}
       <div className="flex items-center justify-between">
         <div>
@@ -158,7 +232,7 @@ export default function CoursesClient({
       {/* Create Course Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="card-brand bg-card max-w-lg w-full p-6 space-y-4 relative">
+          <div className="card-brand bg-card max-w-lg w-full p-4 sm:p-6 space-y-4 relative max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-brand-indigo" />
               إضافة دورة تدريبية جديدة
@@ -166,36 +240,36 @@ export default function CoursesClient({
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   عنوان الدورة
                 </label>
                 <input
                   type="text"
                   required
                   placeholder="مثال: أساسيات التصوير الفوتوغرافي"
-                  className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                  className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   وصف الدورة
                 </label>
                 <textarea
                   required
                   rows={4}
                   placeholder="اكتب نبذة شيقة وجذابة عن محتوى الدورة وأهدافها..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet leading-relaxed"
+                  className="admin-form-input w-full min-h-[120px] px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet leading-relaxed"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                  <label className="admin-form-label text-text-secondary">
                     سعر الدورة (ريال سعودي)
                   </label>
                   <input
@@ -203,18 +277,18 @@ export default function CoursesClient({
                     required
                     min={0}
                     placeholder="299"
-                    className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
+                    className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
                     value={price || ""}
                     onChange={(e) => setPrice(Number(e.target.value))}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                  <label className="admin-form-label text-text-secondary">
                     تعيين لمدرب (اختياري)
                   </label>
                   <select
-                    className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                     value={selectedInstructorId}
                     onChange={(e) => setSelectedInstructorId(e.target.value)}
                   >
@@ -229,13 +303,13 @@ export default function CoursesClient({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   رابط غلاف الدورة (رابط صورة)
                 </label>
                 <input
                   type="url"
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
+                  className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
                   value={thumbnail}
                   onChange={(e) => setThumbnail(e.target.value)}
                 />
@@ -268,8 +342,9 @@ export default function CoursesClient({
 
       {/* Courses Table */}
       <div className="card-brand bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse">
+        <AdminDesktopTable>
+          <AdminTableScroll>
+            <table className="w-full min-w-[980px] text-right border-collapse">
             <thead>
               <tr className="border-b border-subtle bg-secondary/50 text-xs font-semibold text-text-secondary">
                 <th className="p-4">اسم الدورة</th>
@@ -328,44 +403,23 @@ export default function CoursesClient({
                     <td className="p-4 font-almarai text-brand-fuchsia font-bold">
                       {course._count.enrollments} مشتركين
                     </td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          course.status === "DRAFT"
-                            ? "badge-pending"
-                            : course.status === "PENDING"
-                            ? "bg-amber-500/10 text-amber-500"
-                            : course.status === "PUBLISHED"
-                            ? "badge-approved"
-                            : "badge-rejected"
-                        }`}
-                      >
-                        {course.status === "DRAFT" && "مسودة"}
-                        {course.status === "PENDING" && "بانتظار المراجعة"}
-                        {course.status === "PUBLISHED" && "منشورة"}
-                        {course.status === "HIDDEN" && "مخفية"}
-                      </span>
-                    </td>
+                    <td className="p-4">{courseStatusBadge(course.status)}</td>
                     <td className="p-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {/* Edit / Builder */}
+                      <AdminDesktopActions>
                         <Link
                           href={`/dashboard/admin/courses/${course.id}`}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-indigo/10 text-brand-indigo hover:bg-brand-indigo hover:text-white transition-all text-xs font-bold"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-brand-indigo/10 px-2.5 text-brand-indigo hover:bg-brand-indigo hover:text-white transition-all text-xs font-bold"
                           title="تعديل المحتوى"
                         >
                           <Edit className="w-3 h-3" />
                           تعديل
                         </Link>
 
-                        {/* Publish */}
                         {course.status !== "PUBLISHED" && (
                           <button
-                            onClick={() =>
-                              handleStatusChange(course.id, "PUBLISHED")
-                            }
+                            onClick={() => handleStatusChange(course.id, "PUBLISHED")}
                             disabled={isPending && processingId === course.id}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-emerald-500/10 px-2.5 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold"
                           >
                             {isPending && processingId === course.id ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
@@ -376,14 +430,11 @@ export default function CoursesClient({
                           </button>
                         )}
 
-                        {/* Hide */}
                         {course.status === "PUBLISHED" && (
                           <button
-                            onClick={() =>
-                              handleStatusChange(course.id, "HIDDEN")
-                            }
+                            onClick={() => handleStatusChange(course.id, "HIDDEN")}
                             disabled={isPending && processingId === course.id}
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 text-amber-500 hover:bg-amber-500 hover:text-white transition-all text-xs font-bold"
                           >
                             {isPending && processingId === course.id ? (
                               <Loader2 className="w-3 h-3 animate-spin" />
@@ -394,11 +445,10 @@ export default function CoursesClient({
                           </button>
                         )}
 
-                        {/* Delete */}
                         <button
                           onClick={() => handleDelete(course.id, course.title)}
                           disabled={isPending && processingId === course.id}
-                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-bold"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-red-500/10 px-2.5 text-red-500 hover:bg-red-500 hover:text-white transition-all text-xs font-bold"
                           title="حذف الدورة"
                         >
                           {isPending && processingId === course.id ? (
@@ -408,14 +458,50 @@ export default function CoursesClient({
                           )}
                           حذف
                         </button>
-                      </div>
+                      </AdminDesktopActions>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </AdminTableScroll>
+        </AdminDesktopTable>
+
+        <AdminMobileList>
+          {courses.length === 0 ? (
+            <div className="p-8 text-center">
+              <Camera className="mx-auto w-12 h-12 text-text-muted" />
+              <p className="mt-3 text-text-secondary font-semibold">
+                لا توجد دورات مسجلة بالمنصة حالياً.
+              </p>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setIsCreateOpen(true);
+                }}
+                className="btn-primary text-xs mt-4 min-h-11"
+              >
+                ابدأ بإنشاء أول دورة
+              </button>
+            </div>
+          ) : (
+            courses.map((course) => (
+              <AdminMobileCard
+                key={course.id}
+                title={course.title}
+                subtitle={course.instructor.user.name}
+                badge={courseStatusBadge(course.status)}
+                fields={[
+                  { label: "السعر", value: `${course.price} ر.س` },
+                  { label: "الأقسام", value: `${course._count.sections} أقسام` },
+                  { label: "المشتركون", value: `${course._count.enrollments} مشترك` },
+                ]}
+                actions={<AdminMobileActions actions={getCourseActions(course)} />}
+              />
+            ))
+          )}
+        </AdminMobileList>
       </div>
     </div>
   );

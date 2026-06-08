@@ -1,27 +1,75 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Menu, X, LogIn, User, LogOut } from "lucide-react";
+import { Menu, Search, User, LogOut, X } from "lucide-react";
 import { logout } from "@/actions/auth.actions";
+import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { Button } from "@/components/ui/Button";
+
+const NAV_LINKS = [
+  { href: "/", label: "الرئيسية", exact: true },
+  { href: "/courses", label: "الكورسات" },
+  { href: "/#paths", label: "المسارات" },
+  { href: "/#instructors", label: "المدربون" },
+  { href: "/about", label: "عن الأكاديمية" },
+] as const;
+
+function cx(...classes: (string | false | undefined | null)[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Logo({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+      <div
+        className={cx(
+          "relative flex items-center justify-center rounded-xl gradient-brand p-[1.5px] transition-transform duration-300 group-hover:scale-105 shadow-brand",
+          compact ? "w-9 h-9" : "w-10 h-10"
+        )}
+      >
+        <div className="w-full h-full bg-brand-navy-950 rounded-[10px] flex items-center justify-center">
+          <svg
+            width={compact ? 16 : 20}
+            height={compact ? 16 : 20}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="text-brand-magenta"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 2L2 12L12 22L22 12L12 2Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
+      </div>
+      <span className="logo-text text-lg sm:text-xl">بيت المصور</span>
+    </Link>
+  );
+}
 
 export default function Header() {
   const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+  const isScrolled = useScrollPosition(80);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const isDarkSurface =
+    pathname === "/" ||
+    pathname === "/about" ||
+    pathname === "/contact" ||
+    pathname === "/privacy-policy" ||
+    pathname === "/terms-of-service";
+
+  const isTransparent = isDarkSurface && !isScrolled;
 
   const getDashboardLink = () => {
     if (!session?.user) return "/login";
@@ -37,228 +85,248 @@ export default function Header() {
     return "لوحة الطالب";
   };
 
+  const isActive = (href: string, exact?: boolean) => {
+    if (href.startsWith("/#")) return pathname === "/";
+    if (exact) return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeDrawer();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [drawerOpen, closeDrawer]);
+
+  useEffect(() => {
+    closeDrawer();
+  }, [pathname, closeDrawer]);
+
+  const navLinkClass = (href: string, exact?: boolean) =>
+    cx(
+      "relative text-sm font-semibold font-body transition-colors duration-200 py-1",
+      isActive(href, exact)
+        ? "text-brand-violet-600 after:absolute after:-bottom-1 after:inset-x-0 after:h-0.5 after:rounded-full after:bg-brand-violet-600"
+        : isTransparent
+          ? "text-white/85 hover:text-white"
+          : "text-text-secondary hover:text-[#151525]"
+    );
+
+  const drawerLinkClass =
+    "flex min-h-14 items-center text-base font-semibold text-[#151525] border-b border-border-soft hover:text-brand-violet-600 transition-colors font-body";
+
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-[#0a0a0f]/85 backdrop-blur-md border-b border-brand-indigo/20 shadow-[0_4px_30px_rgba(79,70,229,0.05)]"
-          : "bg-transparent border-b border-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-indigo to-brand-fuchsia p-[1.5px] transition-transform duration-300 group-hover:rotate-12 shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-            <div className="w-full h-full bg-[#0a0a0f] rounded-[10px] flex items-center justify-center">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="text-brand-fuchsia"
-              >
-                <path
-                  d="M12 2L2 12L12 22L22 12L12 2Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="fill-brand-indigo/10"
-                />
-                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-              </svg>
-            </div>
-          </div>
-          <span className="text-xl font-black bg-gradient-to-r from-brand-indigo via-brand-violet to-brand-fuchsia bg-clip-text text-fill-transparent webkit-text-fill-transparent font-cairo">
-            بيت المصور
-          </span>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-sm font-medium text-gray-300 hover:text-white transition-colors font-tajawal"
-          >
-            الرئيسية
-          </Link>
-          <Link
-            href="/#courses"
-            className="text-sm font-medium text-gray-300 hover:text-white transition-colors font-tajawal"
-          >
-            الكورسات
-          </Link>
-          <Link
-            href="/about"
-            className="text-sm font-medium text-gray-300 hover:text-white transition-colors font-tajawal"
-          >
-            عن الأكاديمية
-          </Link>
-          <Link
-            href="/contact"
-            className="text-sm font-medium text-gray-300 hover:text-white transition-colors font-tajawal"
-          >
-            تواصل معنا
-          </Link>
-        </nav>
-
-        {/* Desktop CTA / Auth */}
-        <div className="hidden md:flex items-center gap-4">
-          {session?.user ? (
-            <div className="flex items-center gap-3">
-              <Link
-                href={getDashboardLink()}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-indigo to-brand-violet hover:from-brand-violet hover:to-brand-fuchsia shadow-[0_0_20px_rgba(79,70,229,0.2)] hover:shadow-[0_0_25px_rgba(217,70,239,0.3)] transition-all duration-300 transform hover:-translate-y-0.5 font-cairo"
-              >
-                <User className="w-4 h-4" />
-                {getDashboardLabel()}
-              </Link>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="flex items-center justify-center p-2.5 rounded-xl border border-red-500/20 hover:border-red-500 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all duration-300"
-                  title="تسجيل الخروج"
-                >
-                  <LogOut className="w-4.5 h-4.5" />
-                </button>
-              </form>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className="flex items-center gap-1.5 text-sm font-semibold text-gray-300 hover:text-white px-4 py-2.5 rounded-xl transition-colors font-tajawal"
-              >
-                <LogIn className="w-4 h-4" />
-                دخول
-              </Link>
-              <Link
-                href="/register"
-                className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-indigo to-brand-fuchsia hover:from-brand-violet hover:to-brand-fuchsia shadow-[0_0_20px_rgba(79,70,229,0.25)] transition-all duration-300 transform hover:-translate-y-0.5 font-cairo"
-              >
-                ابدأ رحلتك
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Hamburger Toggle */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden flex items-center justify-center p-2 rounded-xl border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700 transition-colors"
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Mobile Drawer Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Mobile Drawer Menu (RTL from right) */}
-      <div
-        className={`fixed top-0 right-0 bottom-0 z-50 w-72 max-w-sm bg-[#0a0a0f] border-l border-gray-900 shadow-2xl p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:hidden ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+    <>
+      <header
+        className={cx(
+          "sticky top-0 z-50 h-[72px] transition-all duration-300",
+          isScrolled
+            ? "bg-white shadow-sm border-b border-border-default"
+            : isTransparent
+              ? "bg-transparent backdrop-blur-sm"
+              : "bg-white border-b border-border-default"
+        )}
       >
-        <div>
-          {/* Drawer Close Button & Logo */}
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-lg font-black bg-gradient-to-r from-brand-indigo to-brand-fuchsia bg-clip-text text-fill-transparent webkit-text-fill-transparent font-cairo">
-              بيت المصور
-            </span>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="flex items-center justify-center p-2 rounded-xl border border-gray-800 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          {/* الشعار — يمين RTL */}
+          <Logo />
 
-          {/* Nav Links */}
-          <nav className="flex flex-col gap-4">
-            <Link
-              href="/"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-semibold text-gray-300 hover:text-white py-2 border-b border-gray-900 font-tajawal"
-            >
-              الرئيسية
-            </Link>
+          {/* Desktop navigation */}
+          <nav
+            className="hidden lg:flex flex-1 items-center justify-center gap-8"
+            aria-label="التنقل الرئيسي"
+          >
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={navLinkClass(link.href, "exact" in link ? link.exact : false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Desktop actions — يسار RTL */}
+          <div className="hidden lg:flex items-center gap-3 shrink-0">
             <Link
               href="/#courses"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-semibold text-gray-300 hover:text-white py-2 border-b border-gray-900 font-tajawal"
+              className={cx(
+                "inline-flex min-h-12 min-w-12 items-center justify-center rounded-md transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet-600",
+                isTransparent
+                  ? "text-white/85 hover:text-white hover:bg-white/10"
+                  : "text-text-secondary hover:text-[#151525] hover:bg-surface-section"
+              )}
+              aria-label="بحث"
             >
-              الكورسات
+              <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
+
+            {session?.user ? (
+              <>
+                <Button
+                  href={getDashboardLink()}
+                  variant="outline"
+                  size="md"
+                  icon={<User className="h-4 w-4" aria-hidden="true" />}
+                >
+                  {getDashboardLabel()}
+                </Button>
+                <form action={logout}>
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="تسجيل الخروج"
+                    icon={<LogOut className="h-4 w-4" aria-hidden="true" />}
+                  />
+                </form>
+              </>
+            ) : (
+              <>
+                <Button href="/login" variant="outline" size="md">
+                  دخول
+                </Button>
+                <Button href="/register" variant="primary" size="md">
+                  ابدأ التعلم
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Mobile actions */}
+          <div className="flex lg:hidden items-center gap-2 shrink-0">
             <Link
-              href="/about"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-semibold text-gray-300 hover:text-white py-2 border-b border-gray-900 font-tajawal"
+              href="/#courses"
+              className={cx(
+                "inline-flex min-h-12 min-w-12 items-center justify-center rounded-md transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet-600",
+                isTransparent
+                  ? "text-white/85 hover:text-white hover:bg-white/10"
+                  : "text-text-secondary hover:text-[#151525] hover:bg-surface-section"
+              )}
+              aria-label="بحث"
             >
-              عن الأكاديمية
+              <Search className="h-5 w-5" aria-hidden="true" />
             </Link>
-            <Link
-              href="/contact"
-              onClick={() => setIsOpen(false)}
-              className="text-base font-semibold text-gray-300 hover:text-white py-2 border-b border-gray-900 font-tajawal"
+
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className={cx(
+                "inline-flex min-h-12 min-w-12 items-center justify-center rounded-md transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet-600",
+                isTransparent
+                  ? "text-white hover:bg-white/10"
+                  : "text-[#151525] hover:bg-surface-section"
+              )}
+              aria-label="فتح القائمة"
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-nav-drawer"
             >
-              تواصل معنا
-            </Link>
-          </nav>
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Overlay */}
+      {drawerOpen ? (
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 lg:hidden"
+          onClick={closeDrawer}
+          aria-hidden="true"
+        />
+      ) : null}
+
+      {/* Mobile drawer — من اليمين */}
+      <aside
+        id="mobile-nav-drawer"
+        className={cx(
+          "fixed inset-y-0 start-0 z-[70] flex w-[280px] max-w-[85vw] flex-col bg-white shadow-hover lg:hidden",
+          "transition-transform duration-300 ease-in-out",
+          drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        )}
+        aria-hidden={!drawerOpen}
+      >
+        <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
+          <Logo compact />
+          <button
+            type="button"
+            onClick={closeDrawer}
+            className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-md text-text-secondary hover:bg-surface-section hover:text-[#151525] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet-600"
+            aria-label="إغلاق القائمة"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
         </div>
 
-        {/* Drawer Footer Auth */}
-        <div className="border-t border-gray-900 pt-6">
+        <nav className="flex-1 overflow-y-auto px-5 py-2" aria-label="قائمة الجوال">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={closeDrawer}
+              className={drawerLinkClass}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="border-t border-border-soft p-5 space-y-3">
           {session?.user ? (
-            <div className="flex flex-col gap-3">
-              <div className="text-xs text-gray-500 mb-1">
-                مرحباً بك، <strong className="text-white">{session.user.name}</strong>
-              </div>
-              <Link
+            <>
+              <p className="text-sm text-text-muted font-body mb-1">
+                مرحباً،{" "}
+                <span className="font-semibold text-[#151525]">{session.user.name}</span>
+              </p>
+              <Button
                 href={getDashboardLink()}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-indigo to-brand-fuchsia font-cairo"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                icon={<User className="h-4 w-4" aria-hidden="true" />}
               >
-                <User className="w-4 h-4" />
                 {getDashboardLabel()}
-              </Link>
+              </Button>
               <form action={logout} className="w-full">
-                <button
+                <Button
                   type="submit"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-colors text-sm font-bold font-cairo"
+                  variant="ghost"
+                  size="lg"
+                  className="w-full text-red-600"
+                  icon={<LogOut className="h-4 w-4" aria-hidden="true" />}
                 >
-                  <LogOut className="w-4 h-4" />
                   تسجيل الخروج
-                </button>
+                </Button>
               </form>
-            </div>
+            </>
           ) : (
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-gray-800 text-gray-300 hover:text-white font-tajawal"
-              >
-                <LogIn className="w-4 h-4" />
+            <>
+              <Button href="/login" variant="outline" size="lg" className="w-full">
                 دخول
-              </Link>
-              <Link
-                href="/register"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-brand-indigo to-brand-fuchsia font-cairo"
-              >
-                ابدأ رحلتك
-              </Link>
-            </div>
+              </Button>
+              <Button href="/register" variant="primary" size="lg" className="w-full">
+                ابدأ التعلم
+              </Button>
+            </>
           )}
         </div>
-      </div>
-    </header>
+      </aside>
+    </>
   );
 }

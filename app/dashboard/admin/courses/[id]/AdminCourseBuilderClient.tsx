@@ -273,7 +273,7 @@ export default function AdminCourseBuilderClient({
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto admin-form-shell">
       {/* Top Bar */}
       <div className="flex items-center gap-4">
         <Link
@@ -309,26 +309,26 @@ export default function AdminCourseBuilderClient({
               className="space-y-4"
             >
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   عنوان الدورة
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3.5 py-2 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                  className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   وصف الدورة
                 </label>
                 <textarea
                   required
                   rows={5}
-                  className="w-full px-3.5 py-2 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet leading-relaxed"
+                  className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet leading-relaxed"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -336,25 +336,25 @@ export default function AdminCourseBuilderClient({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                  <label className="admin-form-label text-text-secondary">
                     السعر (ر.س)
                   </label>
                   <input
                     type="number"
                     required
                     min={0}
-                    className="w-full px-3.5 py-2 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
+                    className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                  <label className="admin-form-label text-text-secondary">
                     حالة الدورة
                   </label>
                   <select
-                    className="w-full px-3.5 py-2 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                    className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                     value={status}
                     onChange={(e) =>
                       setStatus(e.target.value as CourseData["status"])
@@ -369,12 +369,12 @@ export default function AdminCourseBuilderClient({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <label className="admin-form-label text-text-secondary">
                   رابط صورة الغلاف
                 </label>
                 <input
                   type="url"
-                  className="w-full px-3.5 py-2 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
+                  className="admin-form-input w-full px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet font-almarai"
                   value={thumbnail}
                   onChange={(e) => setThumbnail(e.target.value)}
                 />
@@ -409,7 +409,7 @@ export default function AdminCourseBuilderClient({
               <input
                 type="text"
                 placeholder="عنوان القسم الجديد (مثال: التعرف على الكاميرا)"
-                className="flex-grow px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
+                className="admin-form-input flex-grow px-4 py-3 rounded-xl border border-subtle bg-secondary text-sm outline-none text-text-primary focus:border-brand-violet focus:ring-1 focus:ring-brand-violet"
                 value={newSectionTitle}
                 onChange={(e) => setNewSectionTitle(e.target.value)}
               />

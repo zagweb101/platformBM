@@ -8,11 +8,10 @@ export default function ContactPage() {
       {/* Sticky Header */}
       <Header />
       
-      {/* Spacer to offset sticky header */}
-      <div className="h-20" />
-      
-      {/* Contact Form & Information Details */}
-      <ContactSection />
+      <main id="main-content" tabIndex={-1} className="flex-1">
+        <div className="h-20" />
+        <ContactSection />
+      </main>
       
       {/* Global Footer */}
       <Footer />

@@ -1,0 +1,15 @@
+أنت تعمل على مشروع Next.js 15 App Router باسم "بيت المصور".
+المشروع: منصة تعليمية عربية RTL متخصصة في التصوير الفوتوغرافي وصناعة الأفلام.
+Stack: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Prisma + PostgreSQL + NextAuth.js v5
+
+قواعد ثابتة لا تتغير:
+- لا تعدّل قاعدة البيانات أو الـ API أو المصادقة أو منطق الدفع
+- لا تحذف أي وظيفة موجودة
+- لا تغيّر أسماء الحقول القادمة من Backend
+- اكتب كل ملف كاملاً عند التعديل، لا ترسل Diff
+- اذكر مسار الملف الكامل قبل كل كود
+- الواجهة عربية RTL بالكامل — html dir="rtl" lang="ar"
+- استخدم CSS Logical Properties بدلاً من left/right
+- Mobile First — ابدأ بأصغر شاشة ثم وسّع
+- لا Horizontal Scroll
+- الأزرار وحقول اللمس لا تقل عن 48px

@@ -1,70 +1,48 @@
-import { db } from "@/lib/db";
+import { Suspense } from "react";
 import Header from "@/components/landing/Header";
-import HeroSection from "@/components/landing/HeroSection";
-import StatsBar from "@/components/landing/StatsBar";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import CoursesSection from "@/components/landing/CoursesSection";
-import InstructorsSection from "@/components/landing/InstructorsSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import CtaBanner from "@/components/landing/CtaBanner";
-import AboutSection from "@/components/landing/AboutSection";
-import ContactSection from "@/components/landing/ContactSection";
 import Footer from "@/components/landing/Footer";
-import { serializeCoursePrice } from "@/lib/serialize-client";
-import { getPlatformStats, formatStatsForDisplay } from "@/lib/platform-stats";
+import HeroSection from "@/components/home/HeroSection";
+import TrustBar from "@/components/home/TrustBar";
+import LearningPathsSection from "@/components/home/LearningPathsSection";
+import FeaturedCoursesSection, {
+  FeaturedCoursesLoading,
+} from "@/components/home/FeaturedCoursesSection";
+import WhyUsSection from "@/components/home/WhyUsSection";
+import InstructorsSection, {
+  InstructorsLoading,
+} from "@/components/home/InstructorsSection";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import FAQSection from "@/components/home/FAQSection";
+import CTASection from "@/components/home/CTASection";
+import { getHeroStats } from "@/lib/home-data";
 
 export default async function Home() {
-  const [coursesRaw, platformStats] = await Promise.all([
-    db.course.findMany({
-      where: { status: "PUBLISHED" },
-      include: {
-        instructor: {
-          include: {
-            user: true,
-          },
-        },
-      },
-    }),
-    getPlatformStats(),
-  ]);
-
-  const courses = coursesRaw.map(serializeCoursePrice);
-
-  const stats = formatStatsForDisplay(platformStats);
+  const heroStats = await getHeroStats();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col selection:bg-brand-indigo/30 selection:text-white">
-      {/* 1. Header (Sticky & Glassmorphism) */}
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-page">
       <Header />
-      
-      {/* 2. Hero Section (Fullscreen & Cinematic) */}
-      <HeroSection />
-      
-      {/* 3. Stats Bar (Scroll animation counter) */}
-      <StatsBar stats={stats} />
-      
-      {/* 4. Why Us / Features */}
-      <FeaturesSection />
-      
-      {/* 5. Courses Section */}
-      <CoursesSection courses={courses} />
-      
-      {/* 6. About Section */}
-      <AboutSection />
-      
-      {/* 7. Instructors Section */}
-      <InstructorsSection />
-      
-      {/* 8. Testimonials Section */}
-      <TestimonialsSection />
-      
-      {/* 9. CTA Banner */}
-      <CtaBanner />
-      
-      {/* 10. Contact Section */}
-      <ContactSection />
-      
-      {/* 11. Footer */}
+
+      <main id="main-content" tabIndex={-1}>
+        <HeroSection stats={heroStats} />
+        <TrustBar />
+        <LearningPathsSection />
+
+        <Suspense fallback={<FeaturedCoursesLoading />}>
+          <FeaturedCoursesSection />
+        </Suspense>
+
+        <WhyUsSection />
+
+        <Suspense fallback={<InstructorsLoading />}>
+          <InstructorsSection />
+        </Suspense>
+
+        <TestimonialsSection />
+        <FAQSection />
+        <CTASection />
+      </main>
+
       <Footer />
     </div>
   );

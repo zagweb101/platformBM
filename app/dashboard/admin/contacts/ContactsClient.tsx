@@ -5,6 +5,11 @@ import { updateContactMessageStatus } from "@/actions/contact.actions";
 import { toast } from "sonner";
 import { Mail, Loader2, CheckCircle, Eye } from "lucide-react";
 import type { ContactStatus } from "@prisma/client";
+import {
+  AdminDesktopActions,
+  AdminMobileActions,
+  type AdminActionItem,
+} from "@/components/dashboard/admin/AdminActionsMenu";
 
 interface ContactItem {
   id: string;
@@ -50,8 +55,49 @@ export default function ContactsClient({
 
   const newCount = messages.filter((m) => m.status === "NEW").length;
 
+  const getContactActions = (msg: ContactItem): AdminActionItem[] => {
+    const loading = isPending && processingId === msg.id;
+    const actions: AdminActionItem[] = [
+      {
+        id: "toggle",
+        label: expandedId === msg.id ? "إخفاء الرسالة" : "عرض الرسالة",
+        onClick: () => setExpandedId(expandedId === msg.id ? null : msg.id),
+      },
+    ];
+
+    if (msg.status === "NEW") {
+      actions.push({
+        id: "read",
+        label: "تحديد كمقروءة",
+        onClick: () => handleStatus(msg.id, "READ"),
+        disabled: loading,
+        loading,
+      });
+    }
+
+    if (msg.status !== "REPLIED") {
+      actions.push({
+        id: "replied",
+        label: "تم الرد",
+        onClick: () => handleStatus(msg.id, "REPLIED"),
+        disabled: loading,
+        loading,
+      });
+    }
+
+    actions.push({
+      id: "email",
+      label: "رد بالبريد",
+      onClick: () => {
+        window.location.href = `mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`;
+      },
+    });
+
+    return actions;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 admin-form-shell">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-black text-text-primary mb-1">رسائل التواصل</h2>
@@ -101,46 +147,49 @@ export default function ContactsClient({
                 <p className="text-sm text-text-muted line-clamp-2">{msg.message}</p>
               )}
 
-              <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setExpandedId(expandedId === msg.id ? null : msg.id)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-subtle text-xs font-semibold hover:bg-secondary"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  {expandedId === msg.id ? "إخفاء" : "عرض"}
-                </button>
-                {msg.status === "NEW" && (
+              <div className="border-t border-subtle pt-3">
+                <AdminDesktopActions>
                   <button
                     type="button"
-                    disabled={isPending && processingId === msg.id}
-                    onClick={() => handleStatus(msg.id, "READ")}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-indigo/10 text-brand-indigo text-xs font-semibold"
+                    onClick={() => setExpandedId(expandedId === msg.id ? null : msg.id)}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-subtle px-3 text-xs font-semibold hover:bg-secondary"
                   >
-                    {isPending && processingId === msg.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-3.5 h-3.5" />
-                    )}
-                    تحديد كمقروءة
+                    <Eye className="w-3.5 h-3.5" />
+                    {expandedId === msg.id ? "إخفاء" : "عرض"}
                   </button>
-                )}
-                {msg.status !== "REPLIED" && (
-                  <button
-                    type="button"
-                    disabled={isPending && processingId === msg.id}
-                    onClick={() => handleStatus(msg.id, "REPLIED")}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-semibold"
+                  {msg.status === "NEW" && (
+                    <button
+                      type="button"
+                      disabled={isPending && processingId === msg.id}
+                      onClick={() => handleStatus(msg.id, "READ")}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-brand-indigo/10 px-3 text-brand-indigo text-xs font-semibold"
+                    >
+                      {isPending && processingId === msg.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-3.5 h-3.5" />
+                      )}
+                      تحديد كمقروءة
+                    </button>
+                  )}
+                  {msg.status !== "REPLIED" && (
+                    <button
+                      type="button"
+                      disabled={isPending && processingId === msg.id}
+                      onClick={() => handleStatus(msg.id, "REPLIED")}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-emerald-500/10 px-3 text-emerald-500 text-xs font-semibold"
+                    >
+                      تم الرد
+                    </button>
+                  )}
+                  <a
+                    href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-subtle px-3 text-xs font-semibold hover:bg-secondary"
                   >
-                    تم الرد
-                  </button>
-                )}
-                <a
-                  href={`mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject)}`}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-subtle text-xs font-semibold hover:bg-secondary"
-                >
-                  رد بالبريد
-                </a>
+                    رد بالبريد
+                  </a>
+                </AdminDesktopActions>
+                <AdminMobileActions actions={getContactActions(msg)} />
               </div>
             </div>
           ))}

@@ -124,7 +124,6 @@ export default function CoursesSection({ courses = [] }: CoursesSectionProps) {
                       fill
                       sizes="(max-w-768px) 100vw, 33vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      priority
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-700">

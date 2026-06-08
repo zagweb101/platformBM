@@ -10,6 +10,17 @@ import {
   isManualReviewMethod,
   type PaymentMethodType,
 } from "@/lib/payment-labels";
+import {
+  AdminDesktopTable,
+  AdminMobileCard,
+  AdminMobileList,
+  AdminTableScroll,
+} from "@/components/dashboard/admin/AdminTableMobile";
+import {
+  AdminDesktopActions,
+  AdminMobileActions,
+  type AdminActionItem,
+} from "@/components/dashboard/admin/AdminActionsMenu";
 
 interface PaymentItem {
   id: string;
@@ -58,7 +69,6 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: P
         toast.error(res.error);
       } else {
         toast.success(res.success || "تم رفض الدفع.");
-        // Update local state
         setPayments((prev) =>
           prev.map((p) => (p.id === id ? { ...p, status: "REJECTED" } : p))
         );
@@ -66,10 +76,60 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: P
     });
   };
 
+  const statusBadge = (status: PaymentItem["status"]) => (
+    <span
+      className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
+        status === "PENDING"
+          ? "badge-pending"
+          : status === "APPROVED"
+            ? "badge-approved"
+            : "badge-rejected"
+      }`}
+    >
+      {status === "PENDING" && "معلق"}
+      {status === "APPROVED" && "مقبول"}
+      {status === "REJECTED" && "مرفوض"}
+    </span>
+  );
+
+  const getPaymentActions = (payment: PaymentItem): AdminActionItem[] => {
+    if (payment.status !== "PENDING" || !isManualReviewMethod(payment.method)) {
+      return payment.receiptUrl
+        ? [
+            {
+              id: "view",
+              label: "عرض الإيصال",
+              onClick: () => window.open(payment.receiptUrl!, "_blank", "noopener,noreferrer"),
+            },
+          ]
+        : [];
+    }
+
+    const loading = isPending && processingId === payment.id;
+    return [
+      {
+        id: "approve",
+        label: "قبول وتفعيل",
+        onClick: () => handleApprove(payment.id),
+        disabled: loading,
+        loading,
+      },
+      {
+        id: "reject",
+        label: "رفض الطلب",
+        onClick: () => handleReject(payment.id),
+        disabled: loading,
+        loading,
+        variant: "danger",
+      },
+    ];
+  };
+
   return (
-    <div className="card-brand bg-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-right border-collapse">
+    <div className="card-brand bg-card overflow-hidden admin-form-shell">
+      <AdminDesktopTable>
+        <AdminTableScroll>
+          <table className="w-full min-w-[920px] text-right border-collapse">
           <thead>
             <tr className="border-b border-subtle bg-secondary/50 text-xs font-semibold text-text-secondary">
               <th className="p-4">اسم الطالب</th>
@@ -127,57 +187,88 @@ export default function PaymentsClient({ initialPayments }: { initialPayments: P
                       <span className="text-xs text-text-muted">دفع إلكتروني</span>
                     )}
                   </td>
-                  <td className="p-4">
-                    <span
-                      className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        payment.status === "PENDING"
-                          ? "badge-pending"
-                          : payment.status === "APPROVED"
-                          ? "badge-approved"
-                          : "badge-rejected"
-                      }`}
-                    >
-                      {payment.status === "PENDING" && "معلق"}
-                      {payment.status === "APPROVED" && "مقبول"}
-                      {payment.status === "REJECTED" && "مرفوض"}
-                    </span>
-                  </td>
+                  <td className="p-4">{statusBadge(payment.status)}</td>
                   <td className="p-4 text-center">
-                    {payment.status === "PENDING" && isManualReviewMethod(payment.method) && (
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleApprove(payment.id)}
-                          disabled={isPending && processingId === payment.id}
-                          className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors"
-                          title="قبول وتفعيل الدورة"
-                        >
-                          {isPending && processingId === payment.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Check className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleReject(payment.id)}
-                          disabled={isPending && processingId === payment.id}
-                          className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                          title="رفض الطلب"
-                        >
-                          {isPending && processingId === payment.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <X className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    )}
+                    <AdminDesktopActions>
+                      {payment.status === "PENDING" && isManualReviewMethod(payment.method) && (
+                        <>
+                          <button
+                            onClick={() => handleApprove(payment.id)}
+                            disabled={isPending && processingId === payment.id}
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors"
+                            title="قبول وتفعيل الدورة"
+                          >
+                            {isPending && processingId === payment.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Check className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleReject(payment.id)}
+                            disabled={isPending && processingId === payment.id}
+                            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                            title="رفض الطلب"
+                          >
+                            {isPending && processingId === payment.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <X className="w-4 h-4" />
+                            )}
+                          </button>
+                        </>
+                      )}
+                    </AdminDesktopActions>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
-      </div>
+          </table>
+        </AdminTableScroll>
+      </AdminDesktopTable>
+
+      <AdminMobileList>
+        {payments.length === 0 ? (
+          <p className="p-6 text-center text-sm text-text-muted font-body">
+            لا توجد طلبات دفع مرفوعة حالياً.
+          </p>
+        ) : (
+          payments.map((payment) => (
+            <AdminMobileCard
+              key={payment.id}
+              title={payment.user.name}
+              subtitle={payment.user.email}
+              badge={statusBadge(payment.status)}
+              fields={[
+                { label: "الدورة", value: payment.course?.title || "غير معروف" },
+                { label: "المبلغ", value: `${payment.amount} ر.س` },
+                { label: "الطريقة", value: getPaymentMethodLabel(payment.method) },
+                {
+                  label: "التاريخ",
+                  value: new Date(payment.createdAt).toLocaleDateString("ar-SA"),
+                },
+              ]}
+              actions={
+                <>
+                  {payment.receiptUrl ? (
+                    <a
+                      href={payment.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mb-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-brand-violet-600"
+                    >
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                      عرض الإيصال
+                    </a>
+                  ) : null}
+                  <AdminMobileActions actions={getPaymentActions(payment)} />
+                </>
+              }
+            />
+          ))
+        )}
+      </AdminMobileList>
     </div>
   );
 }

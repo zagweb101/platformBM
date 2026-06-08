@@ -15,11 +15,17 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const role = session.user.role as "ADMIN" | "INSTRUCTOR" | "STUDENT";
+
+  if (role === "STUDENT") {
+    return <div className="min-h-screen bg-page">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen flex bg-primary">
       {/* Sidebar - Desktop */}
       <DashboardSidebar
-        role={session.user.role as "ADMIN" | "INSTRUCTOR" | "STUDENT"}
+        role={role}
         userName={session.user.name || ""}
       />
 
@@ -39,7 +45,11 @@ export default async function DashboardLayout({
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-grow p-6 md:p-8 bg-secondary/30 relative">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-grow p-4 md:p-8 bg-secondary/30 relative overflow-x-hidden"
+        >
           {children}
         </main>
       </div>

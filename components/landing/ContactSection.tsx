@@ -197,10 +197,10 @@ export default function ContactSection() {
         href="https://wa.me/966500000000"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-2xl hover:scale-110 transition-transform duration-300 hover:shadow-[0_0_20px_rgba(37,211,102,0.4)]"
-        title="تواصل معنا عبر واتساب"
+        className="fixed bottom-6 end-6 z-40 flex min-h-14 min-w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-transform duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(37,211,102,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
+        aria-label="تواصل معنا عبر واتساب"
       >
-        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.982L2 22l5.233-1.371a9.936 9.936 0 004.779 1.218h.004c5.506 0 9.989-4.478 9.99-9.984A9.998 9.998 0 0012.012 2zm5.835 14.127c-.244.688-1.22 1.259-1.68 1.306-.459.047-.905.088-2.887-.696-2.536-1.002-4.14-3.566-4.267-3.736-.127-.17-1.026-1.365-1.026-2.603 0-1.239.646-1.849.877-2.098.231-.248.508-.311.678-.311h.482c.152 0 .382-.057.593.453.212.51.722 1.758.786 1.886.064.127.106.276.021.446-.085.17-.127.276-.254.425-.127.149-.269.333-.383.446-.128.127-.262.266-.113.521.149.255.661 1.083 1.417 1.754.975.867 1.794 1.135 2.049 1.263.255.127.404.106.553-.064.149-.17.637-.743.807-1.02.17-.276.339-.234.573-.149.234.085 1.485.701 1.74 1.829.255 1.127.255 1.637.011 2.325z" />
         </svg>
       </a>

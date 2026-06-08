@@ -7,7 +7,9 @@ import { requestPasswordReset } from "@/actions/password.actions";
 import { toast } from "sonner";
 import { useTransition } from "react";
 import Link from "next/link";
-import { Loader2, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 const ForgotSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صالح"),
@@ -40,54 +42,36 @@ export default function ForgotPasswordForm() {
 
   return (
     <div>
-      <h2 className="text-2xl font-black text-center text-text-primary mb-2">
-        نسيت كلمة المرور؟
-      </h2>
-      <p className="text-xs text-center text-text-secondary mb-6">
-        أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور
-      </p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-[#151525] font-heading sm:text-3xl">
+          نسيت كلمة المرور؟
+        </h1>
+        <p className="mt-2 text-sm text-text-secondary font-body">
+          أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-xs font-semibold text-text-secondary mb-1.5">
-            البريد الإلكتروني
-          </label>
-          <input
-            type="email"
-            disabled={isPending}
-            placeholder="name@example.com"
-            className="w-full px-4 py-2.5 rounded-xl border border-subtle bg-secondary text-sm focus:border-brand-violet focus:ring-1 focus:ring-brand-violet outline-none transition-all text-text-primary"
-            {...register("email")}
-          />
-          {errors.email && (
-            <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <Input
+          label="البريد الإلكتروني"
+          type="email"
+          autoComplete="email"
           disabled={isPending}
-          className="btn-primary w-full flex items-center justify-center gap-2 text-sm mt-6"
-        >
-          {isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <>
-              <Mail className="w-4 h-4" />
-              إرسال رابط إعادة التعيين
-            </>
-          )}
-        </button>
+          error={errors.email?.message}
+          icon={<Mail className="h-5 w-5" aria-hidden="true" />}
+          {...register("email")}
+        />
+
+        <Button type="submit" variant="primary" size="lg" loading={isPending} className="w-full">
+          إرسال رابط إعادة التعيين
+        </Button>
       </form>
 
-      <div className="mt-6 text-center text-xs text-text-secondary">
-        <Link
-          href="/login"
-          className="font-bold text-brand-indigo hover:text-brand-fuchsia transition-colors"
-        >
+      <p className="mt-8 text-center text-sm text-text-secondary font-body">
+        <Link href="/login" className="font-semibold text-brand-violet-600 hover:underline">
           العودة لتسجيل الدخول
         </Link>
-      </div>
+      </p>
     </div>
   );
 }
