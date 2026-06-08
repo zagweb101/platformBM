@@ -46,6 +46,11 @@ const checks: {
     label: "App URL",
     validate: (v) => v.startsWith("http"),
   },
+  {
+    key: "RAILWAY_PUBLIC_DOMAIN",
+    required: "optional",
+    label: "Railway auto-domain (runtime)",
+  },
   { key: "UPLOADTHING_SECRET", required: "recommended", label: "UploadThing" },
   { key: "UPLOADTHING_APP_ID", required: "recommended", label: "UploadThing App ID" },
   { key: "RESEND_API_KEY", required: "recommended", label: "Resend email" },
@@ -63,7 +68,18 @@ console.log("\n=== Environment Check ===\n");
 let criticalMissing = 0;
 let recommendedMissing = 0;
 
+const hasAppUrl =
+  (process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL.startsWith("http")) ||
+  Boolean(process.env.RAILWAY_PUBLIC_DOMAIN) ||
+  Boolean(process.env.AUTH_URL);
+
 for (const c of checks) {
+  if (c.key === "NEXTAUTH_URL") {
+    const icon = hasAppUrl ? "✅" : "❌";
+    console.log(`${icon} ${c.label} (${c.key})${hasAppUrl ? "" : " — missing or invalid"}`);
+    if (!hasAppUrl) criticalMissing++;
+    continue;
+  }
   const val = process.env[c.key];
   const ok = val && (!c.validate || c.validate(val));
   const icon = ok ? "✅" : c.required === "critical" ? "❌" : "⚠️";

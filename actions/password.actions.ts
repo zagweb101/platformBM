@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { getAppUrl } from "@/lib/app-url";
 
 const RequestResetSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صالح"),
@@ -47,7 +48,7 @@ export async function requestPasswordReset(values: z.infer<typeof RequestResetSc
       },
     });
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = getAppUrl();
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
     await sendPasswordResetEmail(user.email, resetUrl);

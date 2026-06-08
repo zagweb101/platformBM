@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { getAppUrl } from "@/lib/app-url";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const fromEmail =
@@ -26,13 +27,11 @@ export async function sendEmail({
   const client = getResend();
 
   if (!client) {
+    console.warn("[email] RESEND_API_KEY not set — skipping send to:", to);
     if (process.env.NODE_ENV === "development") {
-      console.log("[email:dev]", { to, subject, html });
-      return { success: true as const };
+      console.log("[email:dev]", { to, subject });
     }
-    return {
-      error: "خدمة البريد غير مُعدّة. يرجى ضبط RESEND_API_KEY.",
-    };
+    return { success: true as const, skipped: true as const };
   }
 
   try {
@@ -90,7 +89,7 @@ export async function sendPaymentApprovedEmail(
         <p style="font-weight: bold; font-size: 18px;">${courseTitle}</p>
         <p>يمكنك البدء بالتعلم الآن من لوحة الطالب.</p>
         <p style="margin: 24px 0;">
-          <a href="${process.env.NEXTAUTH_URL}/dashboard/student" style="background: #4F46E5; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold;">
+          <a href="${getAppUrl()}/dashboard/student" style="background: #4F46E5; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold;">
             الذهاب لدوراتي
           </a>
         </p>
@@ -105,7 +104,7 @@ export async function sendCertificateEmail(
   courseTitle: string,
   certificateNumber: string
 ) {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = getAppUrl();
 
   return sendEmail({
     to: email,

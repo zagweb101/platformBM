@@ -15,6 +15,7 @@ import {
   isTabbyConfigured,
 } from "@/lib/tabby";
 import { z } from "zod";
+import { getAppUrl } from "@/lib/app-url";
 
 const BnplCheckoutSchema = z.object({
   courseId: z.string().min(1),
@@ -23,10 +24,6 @@ const BnplCheckoutSchema = z.object({
     .min(9, "رقم الجوال مطلوب للدفع بالأقساط")
     .max(20),
 });
-
-function getBaseUrl() {
-  return process.env.NEXTAUTH_URL || "http://localhost:3000";
-}
 
 async function createPendingBnplPayment(
   userId: string,
@@ -81,7 +78,7 @@ export async function startTamaraCheckout(values: z.infer<typeof BnplCheckoutSch
       amount: course.price,
       user: { name: session.user.name, email: session.user.email },
       phone,
-      baseUrl: getBaseUrl(),
+      baseUrl: getAppUrl(),
     });
 
     if (!checkout?.checkout_url) {
@@ -137,7 +134,7 @@ export async function startTabbyCheckout(values: z.infer<typeof BnplCheckoutSche
       amount: course.price,
       user: { name: session.user.name, email: session.user.email },
       phone,
-      baseUrl: getBaseUrl(),
+      baseUrl: getAppUrl(),
     });
 
     const checkoutUrl = checkout ? getTabbyCheckoutUrl(checkout) : null;

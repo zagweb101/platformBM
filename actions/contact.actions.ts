@@ -30,6 +30,7 @@ export async function submitContactForm(values: z.infer<typeof ContactSchema>) {
     const adminEmail =
       process.env.CONTACT_ADMIN_EMAIL || process.env.EMAIL_FROM || "info@baytalmosawer.com";
 
+    // Email is best-effort; message is always saved in admin inbox
     await sendEmail({
       to: adminEmail,
       subject: `[بيت المصور] ${subject}`,
@@ -43,7 +44,7 @@ export async function submitContactForm(values: z.infer<typeof ContactSchema>) {
           <p>${message.replace(/\n/g, "<br/>")}</p>
         </div>
       `,
-    });
+    }).catch(() => null);
 
     await sendEmail({
       to: email,
@@ -54,7 +55,7 @@ export async function submitContactForm(values: z.infer<typeof ContactSchema>) {
           <p>شكراً لتواصلك مع بيت المصور. استلمنا رسالتك بخصوص «${subject}» وسنرد عليك قريباً.</p>
         </div>
       `,
-    });
+    }).catch(() => null);
 
     return { success: "تم إرسال رسالتك بنجاح! سنتواصل معك قريباً." };
   } catch (error) {

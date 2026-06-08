@@ -6,6 +6,10 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $root
 
+if ($env:RAILWAY_TOKEN) {
+  Write-Host "Using RAILWAY_TOKEN from environment." -ForegroundColor Gray
+}
+
 function Read-DotEnv($path) {
   $vars = @{}
   if (-not (Test-Path $path)) { return $vars }

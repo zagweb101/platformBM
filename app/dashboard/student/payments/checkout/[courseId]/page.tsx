@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -49,7 +50,7 @@ export default async function MoyasarCheckoutPage({
     redirect("/dashboard/student");
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const callbackUrl = `${baseUrl}/api/payments/moyasar/callback?courseId=${course.id}`;
   const price = toNumber(course.price);
 
