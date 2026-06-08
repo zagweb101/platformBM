@@ -13,6 +13,8 @@ import {
   Bell,
   Settings,
   LogOut,
+  Calendar,
+  CreditCard,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { logout } from "@/actions/auth.actions";
@@ -20,12 +22,14 @@ import { logout } from "@/actions/auth.actions";
 const NAV_ITEMS = [
   { href: "/dashboard/student", label: "الرئيسية", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/student#courses", label: "كورساتي", icon: BookOpen },
+  { href: "/dashboard/student/events", label: "فعالياتي", icon: Calendar },
+  { href: "/dashboard/student/payments", label: "المدفوعات", icon: CreditCard },
   { href: "/#paths", label: "مساري", icon: Route },
   { href: "/dashboard/student#tasks", label: "المهام", icon: ListTodo },
   { href: "/dashboard/student#certificates", label: "الشهادات", icon: Award },
   { href: "/courses", label: "المفضلة", icon: Heart },
   { href: "/dashboard/student#notifications", label: "الإشعارات", icon: Bell },
-  { href: "/dashboard/student/payments", label: "الإعدادات", icon: Settings },
+  { href: "/dashboard/student/settings", label: "الملف الشخصي", icon: Settings },
 ] as const;
 
 interface StudentSidebarProps {

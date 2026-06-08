@@ -14,13 +14,17 @@ model User {
   password      String
   role          Role     @default(STUDENT)
   image         String?
+  phone         String?
+  bio           String?
   createdAt     DateTime @default(now())
   
-  instructor    Instructor?
-  enrollments   Enrollment[]
-  payments      Payment[]
-  resetTokens   PasswordResetToken[]
-  certificates  Certificate[]
+  instructor           Instructor?
+  enrollments          Enrollment[]
+  payments             Payment[]
+  resetTokens          PasswordResetToken[]
+  certificates         Certificate[]
+  eventsCreated        Event[]              @relation("EventCreator")
+  eventRegistrations   EventRegistration[]
 }
 
 enum Role {
@@ -197,4 +201,47 @@ model Certificate {
   issuedAt            DateTime @default(now())
 
   @@unique([userId, courseId])
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  title         String
+  description   String
+  coverImage    String?
+  location      String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  capacity      Int?
+  status        EventStatus @default(DRAFT)
+  createdById   String
+  createdBy     User        @relation("EventCreator", fields: [createdById], references: [id])
+  registrations EventRegistration[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+}
+
+model EventRegistration {
+  id        String                  @id @default(cuid())
+  eventId   String
+  userId    String
+  status    EventRegistrationStatus @default(PENDING)
+  note      String?
+  event     Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@unique([eventId, userId])
+}
+
+enum EventRegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

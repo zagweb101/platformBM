@@ -13,7 +13,8 @@ export type InputType =
   | "tel"
   | "password"
   | "number"
-  | "search";
+  | "search"
+  | "datetime-local";
 
 export interface InputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {

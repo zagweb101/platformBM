@@ -14,7 +14,8 @@ import {
   LogOut,
   Home,
   FileCheck,
-  MessageSquare
+  MessageSquare,
+  Calendar
 } from "lucide-react";
 
 interface SidebarProps {
@@ -55,6 +56,11 @@ export default function DashboardSidebar({ role, userName }: SidebarProps) {
             label: "رسائل التواصل",
             icon: MessageSquare,
           },
+          {
+            href: "/dashboard/admin/events",
+            label: "الفعاليات",
+            icon: Calendar,
+          },
         ];
       case "INSTRUCTOR":
         return [
@@ -72,6 +78,11 @@ export default function DashboardSidebar({ role, userName }: SidebarProps) {
             href: "/dashboard/instructor/onboarding",
             label: "تعديل بيانات المدرب",
             icon: Sparkles,
+          },
+          {
+            href: "/dashboard/instructor/settings",
+            label: "الملف الشخصي",
+            icon: Users,
           },
         ];
       case "STUDENT":

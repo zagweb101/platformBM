@@ -105,7 +105,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Quick Action Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mt-8">
         <div className="card-brand p-6 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-text-primary mb-2">مراجعة المدفوعات والاشتراكات</h3>
@@ -148,6 +148,21 @@ export default async function AdminDashboardPage() {
             className="btn-primary text-xs py-2 text-center w-full block"
           >
             عرض جميع الدورات ({totalCourses})
+          </Link>
+        </div>
+
+        <div className="card-brand p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="text-base font-bold text-text-primary mb-2">إدارة الفعاليات والورش</h3>
+            <p className="text-xs text-text-secondary leading-relaxed mb-4">
+              أنشئ فعاليات وورش عمل، واقبل أو ارفض طلبات انضمام الطلاب.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/admin/events"
+            className="btn-primary text-xs py-2 text-center w-full block"
+          >
+            إدارة الفعاليات
           </Link>
         </div>
 

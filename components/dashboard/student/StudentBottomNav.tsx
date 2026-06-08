@@ -5,17 +5,17 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
-  Route,
-  Bell,
+  Calendar,
   User,
+  Route,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard/student", label: "الرئيسية", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/student#courses", label: "كورساتي", icon: BookOpen },
   { href: "/#paths", label: "مساري", icon: Route },
-  { href: "/dashboard/student#notifications", label: "الإشعارات", icon: Bell },
-  { href: "/dashboard/student/payments", label: "حسابي", icon: User },
+  { href: "/dashboard/student/events", label: "فعاليات", icon: Calendar },
+  { href: "/dashboard/student/settings", label: "حسابي", icon: User },
 ] as const;
 
 function cx(...classes: (string | false | undefined | null)[]) {

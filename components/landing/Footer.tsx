@@ -149,6 +149,7 @@ export default function Footer() {
             <ul className="space-y-3 font-body text-sm">
               <li><Link href="/" className="hover:text-white transition-colors">الرئيسية</Link></li>
               <li><Link href="/courses" className="hover:text-white transition-colors">الكورسات</Link></li>
+              <li><Link href="/events" className="hover:text-white transition-colors">الفعاليات</Link></li>
               <li><Link href="/#paths" className="hover:text-white transition-colors">المسارات التعليمية</Link></li>
               <li><Link href="/#instructors" className="hover:text-white transition-colors">المدربون</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">عن الأكاديمية</Link></li>

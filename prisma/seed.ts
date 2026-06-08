@@ -7,6 +7,8 @@ async function main() {
   console.log("Starting seeding...");
 
   // Clean the database
+  await prisma.eventRegistration.deleteMany({});
+  await prisma.event.deleteMany({});
   await prisma.lessonProgress.deleteMany({});
   await prisma.enrollment.deleteMany({});
   await prisma.payment.deleteMany({});
@@ -367,6 +369,40 @@ async function main() {
     where: { id: instructor2.id },
     data: { walletBalance: 389.35 },
   });
+
+  // 8. Sample events
+  const workshop1 = await prisma.event.create({
+    data: {
+      title: "ورشة الإضاءة الاستوديوية العملية",
+      description:
+        "ورشة حضورية مكثفة لتعلّم إعداد الإضاءة الثلاثية، استخدام Softbox وReflector، وتصوير بورتريه احترافي. مناسبة للمبتدئين ومن لديهم أساسيات.",
+      location: "جدة — استوديو بيت المصور",
+      coverImage:
+        "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=1200&auto=format&fit=crop",
+      startsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
+      capacity: 20,
+      status: "PUBLISHED",
+      createdById: admin.id,
+    },
+  });
+
+  const workshop2 = await prisma.event.create({
+    data: {
+      title: "لقاء المصورين — التصوير الشارعي",
+      description:
+        "جولة ميدانية في أحياء جدة التاريخية مع مراجعة فورية للصور وتغذية راجعة من المدرب. احضر كamerتك واستعد للتطبيق.",
+      location: "جدة — البلد",
+      coverImage:
+        "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?q=80&w=1200&auto=format&fit=crop",
+      startsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      capacity: 15,
+      status: "PUBLISHED",
+      createdById: admin.id,
+    },
+  });
+
+  console.log(`Created events: ${workshop1.title}, ${workshop2.title}`);
 
   console.log("Seeding finished successfully!");
 }

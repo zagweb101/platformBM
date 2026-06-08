@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 const NAV_LINKS = [
   { href: "/", label: "الرئيسية", exact: true },
   { href: "/courses", label: "الكورسات" },
+  { href: "/events", label: "الفعاليات" },
   { href: "/#paths", label: "المسارات" },
   { href: "/#instructors", label: "المدربون" },
   { href: "/about", label: "عن الأكاديمية" },
